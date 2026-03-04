@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1628">
+<title>Min Udlejnings App.</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a1628;
+  --bg2: #0f1e38;
+  --bg3: #162340;
+  --card: #1a2a4a;
+  --card2: #1f3158;
+  --accent: #e8a020;
+  --accent2: #f0b840;
+  --blue: #2563eb;
+  --blue2: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --text: #e8edf5;
+  --text2: #94a3c4;
+  --text3: #5a6a8a;
+  --border: #2a3a5a;
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #1a3060 0%, var(--bg) 70%);
+}
+.login-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 3rem; font-weight: 900; letter-spacing: 4px;
+  color: var(--accent); margin-bottom: 6px;
+}
+.login-sub { color: var(--text2); font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; }
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px; width: 100%; max-width: 380px;
+}
+.login-card h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; color: var(--text); }
+
+/* ── INPUTS ── */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 0.95rem; font-family: 'Barlow', sans-serif;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent);
+}
+.field textarea { resize: vertical; min-height: 70px; }
+.field select option { background: var(--bg2); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 22px; border: none; border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; transition: all 0.15s;
+  text-transform: uppercase;
+}
+.btn-accent { background: var(--accent); color: #000; }
+.btn-accent:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-blue:hover { background: var(--blue2); }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-sm { padding: 7px 14px; font-size: 0.85rem; }
+.btn-full { width: 100%; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* ── MAIN LAYOUT ── */
+#app { display: none; min-height: 100vh; }
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; height: 56px;
+}
+.topbar-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 3px; color: var(--accent); flex: 1; }
+.topbar-user { font-size: 0.8rem; color: var(--text2); margin-right: 16px; }
+.topbar-user span { color: var(--accent); font-weight: 600; }
+
+/* ── NAV ── */
+.nav {
+  display: flex; background: var(--bg3); border-bottom: 1px solid var(--border);
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-item {
+  flex: 0 0 auto; padding: 12px 18px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--text2);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-item:hover { color: var(--text); }
+.nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── PAGES ── */
+.page { display: none; padding: 24px 20px; max-width: 960px; margin: 0 auto; }
+.page.active { display: block; }
+.page-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 900;
+  letter-spacing: 2px; color: var(--text); margin-bottom: 6px;
+}
+.page-sub { color: var(--text2); font-size: 0.85rem; margin-bottom: 28px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.card-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700;
+  letter-spacing: 1px; color: var(--accent); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── GRID ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media(max-width: 640px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+/* ── STATS ── */
+.stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
+@media(max-width: 900px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media(max-width: 700px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; text-align: center;
+}
+.stat-num { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--accent); }
+.stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-top: 2px; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+th {
+  text-align: left; padding: 10px 12px;
+  background: var(--bg2); color: var(--text2);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: var(--bg3); }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-green { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+.badge-yellow { background: rgba(232,160,32,.15); color: var(--accent); border: 1px solid rgba(232,160,32,.3); }
+.badge-red { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+.badge-blue { background: rgba(37,99,235,.2); color: var(--blue2); border: 1px solid rgba(37,99,235,.3); }
+
+/* ── WIZARD STEPS ── */
+.wizard-steps { display: flex; gap: 0; margin-bottom: 28px; }
+.wizard-step {
+  flex: 1; text-align: center; padding: 12px 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  border-bottom: 3px solid var(--border); color: var(--text3);
+  position: relative;
+}
+.wizard-step.done { border-color: var(--green); color: var(--green); }
+.wizard-step.active { border-color: var(--accent); color: var(--accent); }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--border); font-size: 0.75rem; margin-bottom: 4px;
+  display: block; margin: 0 auto 4px;
+}
+.wizard-step.active .step-num { background: var(--accent); color: #000; }
+.wizard-step.done .step-num { background: var(--green); color: #fff; }
+
+/* ── SIGNATURE PAD ── */
+#signatureCanvas {
+  border: 1px solid var(--border); border-radius: 8px; background: #fff;
+  cursor: crosshair; touch-action: none; width: 100%; max-width: 600px; display: block;
+}
+
+/* ── PHOTO UPLOAD ── */
+.photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+@media(max-width: 500px) { .photo-grid { grid-template-columns: repeat(2, 1fr); } }
+.photo-thumb {
+  position: relative; aspect-ratio: 4/3;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb .del-btn {
+  position: absolute; top: 4px; right: 4px;
+  background: var(--red); color: #fff; border: none;
+  width: 20px; height: 20px; border-radius: 50%; font-size: 0.7rem;
+  cursor: pointer; display: none; align-items: center; justify-content: center;
+}
+.photo-thumb:hover .del-btn { display: flex; }
+.add-photo-btn {
+  aspect-ratio: 4/3; background: var(--bg2); border: 2px dashed var(--border);
+  border-radius: 8px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 6px; cursor: pointer; color: var(--text2);
+  font-size: 0.78rem; text-align: center; transition: border-color 0.2s;
+}
+.add-photo-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 500;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 16px;
+  padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+}
+.modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 24px; font-size: 0.9rem; z-index: 9999;
+  transition: transform 0.3s; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.success { border-color: var(--green); color: var(--green); }
+#toast.error { border-color: var(--red); color: var(--red); }
+
+/* ── SEARCH BOX ── */
+.search-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-row input { flex: 1; }
+
+/* ── CONTRACT VIEW ── */
+.contract-paper {
+  background: #fff; color: #111; padding: 32px;
+  border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; line-height: 1.6;
+}
+.contract-paper h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.8rem; text-align: center; margin-bottom: 4px; }
+.contract-paper .c-sub { text-align: center; font-size: 0.85rem; color: #555; margin-bottom: 20px; }
+.contract-paper table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.contract-paper table td, .contract-paper table th { border: 1px solid #ccc; padding: 6px 10px; font-size: 0.82rem; }
+.contract-paper table th { background: #f0f0f0; font-weight: 700; }
+.sig-block { display: flex; gap: 24px; margin-top: 24px; }
+.sig-line { flex: 1; border-top: 1px solid #333; padding-top: 6px; font-size: 0.8rem; }
+
+/* ── CVR SPINNER ── */
+.cvr-row { display: flex; gap: 8px; align-items: flex-end; }
+.cvr-row .field { flex: 1; margin-bottom: 0; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 48px 24px; color: var(--text2); }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* ── MOBILE NAV BAR ── */
+@media(max-width: 640px) {
+  .page { padding: 16px; }
+  .topbar-user { display: none; }
+}
+
+/* ── BILTJEK SKETCH ── */
+.sketch-wrap { background: var(--bg2); border-radius: 8px; padding: 14px; margin: 12px 0; }
+.sketch-wrap strong { font-size:.82rem; color: var(--text2); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:10px; }
+.sketch-grid-bt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sketch-btn-bt {
+  padding: 28px 10px; border-radius: 8px; font-weight: 700; cursor: pointer;
+  text-align: center; font-family: 'Barlow Condensed', sans-serif;
+  font-size: .95rem; letter-spacing: 1px; text-transform: uppercase; border: 2px solid;
+  background: var(--bg3); border-color: var(--border); color: var(--text2);
+  transition: all .15s;
+}
+.sketch-btn-bt:hover { border-color: var(--accent); color: var(--accent); }
+.sketch-btn-bt.damaged { background: rgba(239,68,68,.15); border-color: var(--red); color: var(--red); }
+.damage-item-bt {
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25);
+  padding: 10px 12px; border-radius: 6px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+}
+.damage-title-bt { font-weight: 700; color: var(--red); font-size:.85rem; margin-bottom:2px; }
+.damage-desc-bt { font-size:.82rem; color: var(--text2); }
+.history-item-bt {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 14px; margin-bottom: 10px;
+}
+.bt-photo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 8px; }
+.bt-photo-box { position:relative; aspect-ratio:1; background:var(--bg2); border-radius:6px; overflow:hidden; }
+.bt-photo-box img { width:100%; height:100%; object-fit:cover; }
+.bt-photo-del { position:absolute; top:3px; right:3px; background:var(--red); color:#fff; border:none; width:20px; height:20px; border-radius:50%; font-size:.7rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.file-drop-bt {
+  width:100%; padding:14px; background:var(--bg2); border:2px dashed var(--border);
+  border-radius:8px; cursor:pointer; text-align:center; color:var(--text2);
+  font-family:'Barlow',sans-serif; font-size:.88rem; transition:border-color .15s;
+}
+.file-drop-bt:hover { border-color: var(--accent); color: var(--accent); }
+.rapport-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+.rapport-row:last-child { border-bottom:none; }
+
+/* ── COLOR UTIL ── */
+.text-accent { color: var(--accent); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.justify-between { justify-content: space-between; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text2); }
+.info-val { font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ────────────────── LOGIN ────────────────── -->
+<div id="loginScreen">
+  <div class="login-logo">Min Udlejnings App.</div>
+  <div class="login-sub">Varebil Udlejning & Biltjek</div>
+  <div class="login-card">
+    <h2>Log ind</h2>
+    <div class="field"><label>Brugernavn</label><input type="text" id="loginUser" placeholder="Brugernavn"></div>
+    <div class="field"><label>Adgangskode</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    <button class="btn btn-accent btn-full mt-16" onclick="doLogin()">LOG IND</button>
+    <div id="loginErr" style="color:var(--red);font-size:.82rem;margin-top:10px;display:none;">Forkert brugernavn eller adgangskode</div>
+  </div>
+  <div style="color:var(--text3);font-size:.75rem;margin-top:20px;">Standard admin: admin / pilot2024</div>
+</div>
+
+<!-- ────────────────── APP ────────────────── -->
+<div id="app">
+  <div class="topbar">
+    Min Udlejnings App.
+    <div class="topbar-user">Logget ind som: <span id="currentUserLabel"></span></div>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Log ud</button>
+  </div>
+  <div class="nav" id="mainNav">
+    <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)">Dashboard</div>
+    <div class="nav-item" data-page="newContract" onclick="showPage('newContract',this)">Ny Kontrakt</div>
+    <div class="nav-item" data-page="contracts" onclick="showPage('contracts',this)">Kontrakter</div>
+    <div class="nav-item" data-page="vehicles" onclick="showPage('vehicles',this)">Biler</div>
+    <div class="nav-item" data-page="drivers" onclick="showPage('drivers',this)">Lejere</div>
+    <div class="nav-item" data-page="biltjek" onclick="showPage('biltjek',this)">Biltjek</div>
+    <div class="nav-item" data-page="rapport" onclick="showPage('rapport',this)">Rapport</div>
+    <div class="nav-item admin-only" data-page="users" onclick="showPage('users',this)" style="display:none">Brugere</div>
+    <div class="nav-item admin-only" data-page="settings" onclick="showPage('settings',this)" style="display:none">Indstillinger</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Overblik over udlejning</div>
+    <div class="stat-grid" id="dashStats"></div>
+    <div class="card">
+      <div class="card-title">🔑 Aktive Kontrakter</div>
+      <div class="table-wrap"><table id="dashActiveTable">
+        <thead><tr><th>Bil</th><th>Lejer</th><th>Fra</th><th>Til</th><th>Status</th><th></th></tr></thead>
+        <tbody id="dashActiveBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- NY KONTRAKT (wizard) -->
+  <div class="page" id="page-newContract">
+    <div class="page-title">Ny Kontrakt</div>
+    <div class="page-sub">Opret ny udlejningskontrakt</div>
+    <div class="wizard-steps" id="wizardSteps">
+      <div class="wizard-step active" id="ws1"><div class="step-num">1</div>Udlejer</div>
+      <div class="wizard-step" id="ws2"><div class="step-num">2</div>Lejer</div>
+      <div class="wizard-step" id="ws3"><div class="step-num">3</div>Fører</div>
+      <div class="wizard-step" id="ws4"><div class="step-num">4</div>Bil & Periode</div>
+      <div class="wizard-step" id="ws5"><div class="step-num">5</div>Billeder</div>
+      <div class="wizard-step" id="ws6"><div class="step-num">6</div>Underskrift</div>
+      <div class="wizard-step" id="ws7"><div class="step-num">7</div>Kontrakt</div>
+    </div>
+
+    <!-- Step 1: Udlejer -->
+    <div id="step1" class="card">
+      <div class="card-title">🏢 Udlejerens Oplysninger</div>
+      <div class="cvr-row">
+        <div class="field"><label>Hent fra CVR-nr.</label><input type="text" id="cvrInput" placeholder="F.eks. 12345678" maxlength="8"></div>
+        <button class="btn btn-blue" onclick="fetchCVR()" style="margin-bottom:0;height:42px;align-self:flex-end">Hent <span id="cvrSpinner" style="display:none" class="spinner"></span></button>
+      </div>
+      <div id="cvrResult" style="color:var(--text2);font-size:.82rem;margin-bottom:12px;"></div>
+      <div class="grid2">
+        <div class="field"><label>Firmanavn *</label><input id="u_name" placeholder="Firmanavn"></div>
+        <div class="field"><label>CVR-nr.</label><input id="u_cvr" placeholder="CVR-nummer"></div>
+        <div class="field"><label>Adresse</label><input id="u_addr" placeholder="Vejnavn og nummer"></div>
+        <div class="field"><label>By & Postnr.</label><input id="u_city" placeholder="2100 København Ø"></div>
+        <div class="field"><label>Telefon</label><input id="u_phone" placeholder="Tlf."></div>
+        <div class="field"><label>E-mail</label><input id="u_email" type="email" placeholder="mail@firma.dk"></div>
+      </div>
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-accent" onclick="goStep(2)">Næste →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Lejer -->
+    <div id="step2" class="card" style="display:none">
+      <div class="card-title">👤 Lejerens Oplysninger</div>
+
+      <!-- Lejer type toggle -->
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button id="btn_privat" class="btn btn-accent" onclick="setLeaserType('privat')" style="flex:1">👤 Privat person</button>
+        <button id="btn_firma" class="btn btn-ghost" onclick="setLeaserType('firma')" style="flex:1">🏢 Firma</button>
+      </div>
+
+      <!-- Firma CVR opslag -->
+      <div id="leaserCVRBlock" style="display:none">
+        <div class="cvr-row">
+          <div class="field"><label>Hent firma fra CVR-nr.</label><input type="text" id="d_cvr_input" placeholder="12345678" maxlength="8"></div>
+          <button class="btn btn-blue" onclick="fetchLeaserCVR()" style="height:42px;align-self:flex-end;margin-bottom:0">Hent <span id="leaserCVRSpinner" style="display:none" class="spinner"></span></button>
+        </div>
+        <div id="leaserCVRResult" style="font-size:.82rem;margin-bottom:12px"></div>
+      </div>
+
+      <div class="field">
+        <label>Vælg eksisterende lejer</label>
+        <select id="driverSelect" onchange="fillDriverFromSelect()">
+          <option value="">-- Ny lejer / Søg --</option>
+        </select>
+      </div>
+      <hr class="divider">
+
+      <!-- Scan knapper -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" onclick="document.getElementById('scanLicenseInput').click()">📷 Scan kørekort</button>
+        <button class="btn btn-blue btn-sm" id="btnScanVUB" onclick="document.getElementById('scanVUBInput').click()">📷 Scan VUB-kort</button>
+        <span id="scanStatus" style="font-size:.8rem;color:var(--text2);align-self:center"></span>
+      </div>
+      <input type="file" id="scanLicenseInput" accept="image/*" capture="environment" style="display:none" onchange="scanDocument(event,'license')">
+      <input type="file" id="scanVUBInput" accept="image/*" capture="environment" style="display:none" onchange="scanDocument(event,'vub')">
+
+      <div class="grid2">
+        <div class="field"><label id="label_d_name">Fulde navn *</label><input id="d_name" placeholder="For- og efternavn"></div>
+        <div class="field" id="field_d_cpr"><label>CPR / ID</label><input id="d_cpr" placeholder="CPR-nr. eller ID"></div>
+        <div class="field" id="field_d_cvr" style="display:none"><label>CVR-nr.</label><input id="d_cvr" placeholder="CVR-nummer"></div>
+        <div class="field"><label>Adresse</label><input id="d_addr" placeholder="Adresse"></div>
+        <div class="field"><label>By & Postnr.</label><input id="d_city" placeholder="Postnr. og by"></div>
+        <div class="field"><label>Telefon</label><input id="d_phone" placeholder="Tlf."></div>
+        <div class="field"><label>E-mail</label><input id="d_email" type="email" placeholder="mail@eksempel.dk"></div>
+        <div class="field" id="field_d_license"><label>Kørekortnummer *</label><input id="d_license" placeholder="Kørekort nr."></div>
+        <div class="field"><label>VUB-nummer</label><input id="d_vub" placeholder="VUB nr."></div>
+        <div class="field"><label>Tilladelsesnummer</label><input id="d_tilladelse" placeholder="Tilladelse nr."></div>
+        <div class="field"><label>Nationalitet</label><input id="d_nat" placeholder="F.eks. Dansk"></div>
+        <div class="field" id="field_d_contact" style="display:none"><label>Kontaktperson</label><input id="d_contact" placeholder="Navn på kontaktperson"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text2);margin-top:4px;cursor:pointer">
+        <input type="checkbox" id="d_save"> Gem lejer til fremtidig brug
+      </label>
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Tilbage</button>
+        <button class="btn btn-accent" onclick="goStep(3)">Næste →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Fører -->
+    <div id="step3" class="card" style="display:none">
+      <div class="card-title">🚗 Fører af køretøjet</div>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:14px">Den person der fysisk kører bilen. Skal udfyldes selvom det er samme person som lejeren.</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-blue btn-sm" onclick="document.getElementById('scanDriverLicenseInput').click()">📷 Scan kørekort</button>
+        <span id="driverScanStatus" style="font-size:.8rem;color:var(--text2);align-self:center"></span>
+      </div>
+      <input type="file" id="scanDriverLicenseInput" accept="image/*" capture="environment" style="display:none" onchange="scanDriverDocument(event)">
+
+      <div class="grid2">
+        <div class="field"><label>Fulde navn *</label><input id="dr_name" placeholder="For- og efternavn"></div>
+        <div class="field"><label>CPR / ID</label><input id="dr_cpr" placeholder="CPR-nr. eller ID"></div>
+        <div class="field"><label>Adresse</label><input id="dr_addr" placeholder="Adresse"></div>
+        <div class="field"><label>By & Postnr.</label><input id="dr_city" placeholder="Postnr. og by"></div>
+        <div class="field"><label>Telefon</label><input id="dr_phone" placeholder="Tlf."></div>
+        <div class="field"><label>E-mail</label><input id="dr_email" type="email" placeholder="mail@eksempel.dk"></div>
+        <div class="field"><label>Kørekortnummer *</label><input id="dr_license" placeholder="Kørekort nr."></div>
+        <div class="field"><label>Nationalitet</label><input id="dr_nat" placeholder="F.eks. Dansk"></div>
+      </div>
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Tilbage</button>
+        <button class="btn btn-accent" onclick="goStep(4)">Næste →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Bil & Periode -->
+    <div id="step4" class="card" style="display:none">
+      <div class="card-title">🚐 Bil & Udlejningsperiode</div>
+      <div class="grid2">
+        <div class="field"><label>Vælg bil *</label>
+          <select id="v_select" onchange="onVehicleSelect()">
+            <option value="">-- Vælg bil --</option>
+          </select>
+        </div>
+        <div class="field"><label>Registreringsnummer</label><input id="v_reg" readonly placeholder="Udfyldes automatisk"></div>
+        <div class="field"><label>Afhentning dato & tid *</label><input type="datetime-local" id="c_pickup"></div>
+        <div class="field"><label>Aflevering dato & tid *</label><input type="datetime-local" id="c_return" onchange="validateDates()"></div>
+      </div>
+      <div id="dateError" style="color:var(--red);font-size:.82rem;margin-top:6px;display:none"></div>
+      <div class="grid2 mt-16">
+        <div class="field"><label>Km stand ved afhentning</label><input type="number" id="c_km_out" placeholder="KM"></div>
+        <div class="field"><label>Brændstof ved afhentning</label>
+          <select id="c_fuel_out"><option>Fuld</option><option>3/4</option><option>1/2</option><option>1/4</option><option>Næsten tom</option></select>
+        </div>
+        <div class="field"><label>Dagspris (DKK)</label><input type="number" id="c_price" placeholder="0.00"></div>
+        <div class="field"><label>Depositum (DKK)</label><input type="number" id="c_deposit" placeholder="0.00"></div>
+        <div class="field"><label>Selvrisiko (DKK)</label><input type="number" id="c_selvrisiko" placeholder="0.00"></div>
+        <div class="field"><label>Selvrisiko — bemærkning</label><input id="c_selvrisiko_note" placeholder="F.eks. dækker ikke tagskader"></div>
+      </div>
+      <div class="field mt-8"><label>Særlige bemærkninger</label><textarea id="c_notes" placeholder="Eventuelle bemærkninger..."></textarea></div>
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Tilbage</button>
+        <button class="btn btn-accent" onclick="goStep(5)">Næste →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: Billeder -->
+    <div id="step5" class="card" style="display:none">
+      <div class="card-title">📷 Billedregistrering af skader</div>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:12px;">Tag billeder af bilen for at dokumentere eksisterende skader og stand ved afhentning.</p>
+      <div class="photo-grid" id="photoGrid">
+        <div class="add-photo-btn" onclick="document.getElementById('photoInput').click()">
+          <div style="font-size:1.8rem">📷</div>
+          <div>Tilføj billede</div>
+        </div>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handlePhotos(event)">
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-ghost" onclick="goStep(4)">← Tilbage</button>
+        <button class="btn btn-accent" onclick="goStep(6)">Næste →</button>
+      </div>
+    </div>
+
+    <!-- Step 6: Underskrift -->
+    <div id="step6" class="card" style="display:none">
+      <div class="card-title">✍️ Underskrifter</div>
+      <p style="color:var(--text2);font-size:.85rem;margin-bottom:12px;">Begge parter underskriver kontrakten digitalt.</p>
+      <div class="grid2">
+        <div>
+          <div style="font-size:.82rem;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Udlejers underskrift</div>
+          <canvas id="sigLessor" width="300" height="120" style="border:1px solid var(--border);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair;width:100%"></canvas>
+          <button class="btn btn-ghost btn-sm mt-8" onclick="clearSig('sigLessor')">Ryd</button>
+        </div>
+        <div>
+          <div style="font-size:.82rem;color:var(--text2);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:1px">Lejers underskrift</div>
+          <canvas id="sigLessee" width="300" height="120" style="border:1px solid var(--border);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair;width:100%"></canvas>
+          <button class="btn btn-ghost btn-sm mt-8" onclick="clearSig('sigLessee')">Ryd</button>
+        </div>
+      </div>
+      <div class="mt-16 flex gap-8">
+        <button class="btn btn-ghost" onclick="goStep(5)">← Tilbage</button>
+        <button class="btn btn-accent" onclick="finalizeContract()">Opret Kontrakt →</button>
+      </div>
+    </div>
+
+    <!-- Step 7: Kontrakt -->
+    <div id="step7" class="card" style="display:none">
+      <div class="card-title">📄 Kontrakt Oprettet</div>
+      <div id="contractPreview"></div>
+      <div class="flex gap-8 mt-16" style="flex-wrap:wrap">
+        <button class="btn btn-blue" onclick="printContract()">🖨️ Print</button>
+        <button class="btn btn-green" onclick="emailContract()">📧 Send på mail</button>
+        <button class="btn btn-ghost" onclick="exportContract()">⬇️ Eksporter JSON</button>
+        <button class="btn btn-accent" onclick="resetWizard()">+ Ny Kontrakt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRACTS LIST -->
+  <div class="page" id="page-contracts">
+    <div class="flex justify-between flex-center" style="margin-bottom:6px">
+      <div class="page-title">Kontrakter</div>
+      <div class="flex gap-8">
+        <button class="btn btn-ghost btn-sm" onclick="importData()">⬆️ Import</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportAllData()">⬇️ Eksport</button>
+      </div>
+    </div>
+    <div class="page-sub">Alle udlejningskontrakter</div>
+    <div class="search-row">
+      <div class="field" style="margin:0;flex:1"><input id="contractSearch" placeholder="Søg kontrakter..." oninput="renderContracts()"></div>
+      <select class="field" style="margin:0;width:140px" id="contractFilter" onchange="renderContracts()">
+        <option value="">Alle</option>
+        <option value="active">Aktive</option>
+        <option value="returned">Afsluttede</option>
+        <option value="overdue">Overskredet</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nr.</th><th>Bil</th><th>Lejer</th><th>Afhentning</th><th>Aflevering</th><th>Status</th><th>Handlinger</th></tr></thead>
+        <tbody id="contractsBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- VEHICLES -->
+  <div class="page" id="page-vehicles">
+    <div class="flex justify-between flex-center" style="margin-bottom:6px">
+      <div class="page-title">Biler</div>
+      <button class="btn btn-accent btn-sm" onclick="openVehicleModal()">+ Tilføj bil</button>
+    </div>
+    <div class="page-sub">Administrer din bilflåde</div>
+    <div class="grid3" id="vehicleGrid"></div>
+  </div>
+
+  <!-- DRIVERS -->
+  <div class="page" id="page-drivers">
+    <div class="flex justify-between flex-center" style="margin-bottom:6px">
+      <div class="page-title">Lejere</div>
+      <button class="btn btn-accent btn-sm" onclick="openDriverModal()">+ Tilføj lejer</button>
+    </div>
+    <div class="page-sub">Registrerede chauffører og lejere</div>
+    <div class="search-row">
+      <div class="field" style="margin:0;flex:1"><input id="driverSearch" placeholder="Søg lejere..." oninput="renderDrivers()"></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Navn</th><th>Telefon</th><th>Kørekort</th><th>VUB</th><th>Tilladelse</th><th>Lejer af</th><th></th></tr></thead>
+        <tbody id="driversBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- USERS (admin only) -->
+  <div class="page" id="page-users">
+    <div class="flex justify-between flex-center" style="margin-bottom:6px">
+      <div class="page-title">Brugere</div>
+      <button class="btn btn-accent btn-sm" onclick="openUserModal()">+ Opret bruger</button>
+    </div>
+    <div class="page-sub">Administrer biladministratorer og login</div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Brugernavn</th><th>Navn</th><th>Rolle</th><th>Handlinger</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- BILTJEK PAGE -->
+  <div class="page" id="page-biltjek">
+    <div class="flex justify-between flex-center" style="margin-bottom:6px">
+      <div class="page-title">Biltjek</div>
+      <button class="btn btn-accent btn-sm" onclick="btStartNew()">+ Nyt biltjek</button>
+    </div>
+    <div class="page-sub">Registrér bilstand og skader</div>
+    <div class="search-row">
+      <div class="field" style="margin:0;flex:1"><input id="btSearch" placeholder="Søg bil eller chauffør..." oninput="btLoadChecks()"></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Bil</th><th>Chauffør</th><th>Dato</th><th>Skader</th><th>Billeder</th><th></th></tr></thead>
+        <tbody id="btChecksBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- RAPPORT PAGE -->
+  <div class="page" id="page-rapport">
+    <div class="page-title">Skaderapport</div>
+    <div class="page-sub">Oversigt over registrerede skader</div>
+    <div class="flex gap-8" style="margin-bottom:16px">
+      <button class="btn btn-blue btn-sm" onclick="window.print()">🖨 Print rapport</button>
+    </div>
+    <div id="rapportContent"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="page-title">Indstillinger</div>
+    <div class="page-sub">Virksomhedsoplysninger og system</div>
+    <div class="card">
+      <div class="card-title">🏢 Virksomhedsoplysninger</div>
+      <div class="grid2">
+        <div class="field"><label>Firmanavn</label><input id="s_name" placeholder=""></div>
+        <div class="field"><label>CVR</label><input id="s_cvr" placeholder=""></div>
+        <div class="field"><label>Adresse</label><input id="s_addr" placeholder=""></div>
+        <div class="field"><label>By</label><input id="s_city" placeholder=""></div>
+        <div class="field"><label>Telefon</label><input id="s_phone" placeholder=""></div>
+        <div class="field"><label>E-mail</label><input id="s_email" placeholder=""></div>
+      </div>
+      <button class="btn btn-accent mt-8" onclick="saveSettings()">Gem indstillinger</button>
+    </div>
+    <div class="card mt-16">
+      <div class="card-title">⚠️ Nulstil data</div>
+      <p style="color:var(--text2);font-size:.88rem;margin-bottom:12px;">Slet alle kontrakter, biler og lejere. Kan ikke fortrydes.</p>
+      <button class="btn btn-red" onclick="confirmReset()">Nulstil alle data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ────── MODALS ────── -->
+<!-- Vehicle Modal -->
+<div class="modal-overlay" id="vehicleModal">
+  <div class="modal">
+    <h3 id="vModalTitle">Tilføj Bil</h3>
+    <input type="hidden" id="v_editId">
+    <div class="grid2">
+      <div class="field"><label>Mærke *</label><input id="vm_brand" placeholder="F.eks. Mercedes"></div>
+      <div class="field"><label>Model *</label><input id="vm_model" placeholder="F.eks. Sprinter"></div>
+      <div class="field"><label>Registreringsnummer *</label><input id="vm_reg" placeholder="AB12345" style="text-transform:uppercase"></div>
+      <div class="field"><label>Årgang</label><input id="vm_year" type="number" placeholder="2022"></div>
+      <div class="field"><label>Farve</label><input id="vm_color" placeholder="Hvid"></div>
+      <div class="field"><label>VIN-nummer</label><input id="vm_vin" placeholder="VIN"></div>
+      <div class="field"><label>Antal km</label><input id="vm_km" type="number" placeholder="0"></div>
+      <div class="field"><label>Brændstoftype</label>
+        <select id="vm_fuel"><option>Diesel</option><option>Benzin</option><option>El</option><option>Hybrid</option></select>
+      </div>
+      <div class="field"><label>Nyttelast (kg)</label><input id="vm_payload" type="number" placeholder="1000"></div>
+      <div class="field"><label>Dagspris (DKK)</label><input id="vm_price" type="number" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Bemærkninger</label><textarea id="vm_notes" placeholder="Ekstra info..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('vehicleModal')">Annuller</button>
+      <button class="btn btn-accent" onclick="saveVehicle()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Driver Modal -->
+<div class="modal-overlay" id="driverModal">
+  <div class="modal">
+    <h3 id="dModalTitle">Tilføj Lejer</h3>
+    <input type="hidden" id="dm_editId">
+    <div class="grid2">
+      <div class="field"><label>Fulde navn *</label><input id="dm_name" placeholder="Navn"></div>
+      <div class="field"><label>CPR / ID</label><input id="dm_cpr" placeholder="CPR"></div>
+      <div class="field"><label>Adresse</label><input id="dm_addr" placeholder="Adresse"></div>
+      <div class="field"><label>By & Postnr.</label><input id="dm_city" placeholder="By"></div>
+      <div class="field"><label>Telefon</label><input id="dm_phone" placeholder="Tlf."></div>
+      <div class="field"><label>E-mail</label><input id="dm_email" type="email" placeholder="mail@"></div>
+      <div class="field"><label>Kørekortnummer *</label><input id="dm_license" placeholder="Kørekort nr."></div>
+      <div class="field"><label>VUB-nummer</label><input id="dm_vub" placeholder="VUB nr."></div>
+      <div class="field"><label>Tilladelsesnummer</label><input id="dm_til" placeholder="Tilladelse nr."></div>
+      <div class="field"><label>Nationalitet</label><input id="dm_nat" placeholder="Dansk"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('driverModal')">Annuller</button>
+      <button class="btn btn-accent" onclick="saveDriver()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <h3 id="uModalTitle">Opret Bruger</h3>
+    <input type="hidden" id="um_editId">
+    <div class="field"><label>Brugernavn *</label><input id="um_username" placeholder="Brugernavn"></div>
+    <div class="field"><label>Fulde navn</label><input id="um_name" placeholder="For- og efternavn"></div>
+    <div class="field"><label>Adgangskode *</label><input type="password" id="um_pass" placeholder="Min. 6 tegn"></div>
+    <div class="field"><label>Rolle</label>
+      <select id="um_role"><option value="user">Biladministrator</option><option value="admin">Administrator</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">Annuller</button>
+      <button class="btn btn-accent" onclick="saveUser()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contract Detail Modal -->
+<div class="modal-overlay" id="contractDetailModal">
+  <div class="modal" style="max-width:700px">
+    <h3>Kontrakt Detaljer</h3>
+    <div id="contractDetailContent"></div>
+    <div class="modal-actions flex" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-blue btn-sm" onclick="printContractById()">🖨️ Print</button>
+      <button class="btn btn-green btn-sm" onclick="emailContractById()">📧 Send mail</button>
+      <button class="btn btn-red btn-sm" id="returnBtn" onclick="returnVehicle()">✅ Afslut/Aflever</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('contractDetailModal')">Luk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Biltjek Check Modal -->
+<div class="modal-overlay" id="btCheckModal">
+  <div class="modal" style="max-width:600px">
+    <h3 id="btCheckTitle">Nyt biltjek</h3>
+    <div class="grid2">
+      <div class="field">
+        <label>Bil *</label>
+        <select id="btVehicle" onchange="btRenderSketch()">
+          <option value="">-- Vælg bil --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Chauffør *</label>
+        <select id="btDriver">
+          <option value="">-- Vælg chauffør --</option>
+        </select>
+      </div>
+    </div>
+    <div class="sketch-wrap">
+      <strong>Marker skader på bilen:</strong>
+      <div class="sketch-grid-bt" id="btSketchGrid"></div>
+    </div>
+    <div id="btDamageList"></div>
+    <div class="field mt-8">
+      <label>Generel tilstand / bemærkninger</label>
+      <textarea id="btCondition" rows="3" placeholder="Beskriv bilens generelle tilstand..." style="font-family:'Barlow',sans-serif;font-size:.92rem;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);width:100%;resize:vertical"></textarea>
+    </div>
+    <div class="field mt-8">
+      <label>Billeder</label>
+      <label class="file-drop-bt" for="btPhotoInput">📷 Tag eller vælg billeder</label>
+      <input type="file" id="btPhotoInput" accept="image/*" multiple capture="environment" style="display:none" onchange="btHandlePhotos(event)">
+      <div class="bt-photo-grid" id="btPhotoPreview" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('btCheckModal')">Annuller</button>
+      <button class="btn btn-accent" onclick="btSaveCheck()">Gem biltjek</button>
+    </div>
+  </div>
+</div>
+
+<!-- Biltjek Damage Modal -->
+<div class="modal-overlay" id="btDamageModal">
+  <div class="modal" style="max-width:420px">
+    <h3 id="btDamageAreaName">Skade</h3>
+    <div class="field">
+      <label>Beskrivelse af skade</label>
+      <textarea id="btDamageDesc" rows="4" placeholder="Beskriv skaden..." style="font-family:'Barlow',sans-serif;font-size:.92rem;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);width:100%;resize:vertical"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('btDamageModal')">Annuller</button>
+      <button class="btn btn-accent" onclick="btAddDamage()">Tilføj skade</button>
+    </div>
+  </div>
+</div>
+
+<!-- Biltjek History Modal -->
+<div class="modal-overlay" id="btHistoryModal">
+  <div class="modal" style="max-width:660px">
+    <h3 id="btHistoryTitle">Historik</h3>
+    <div id="btHistoryContent" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('btHistoryModal')">Luk</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA STORE  (localStorage)
+// ═══════════════════════════════════════════════
+const STORE = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)) || null; } catch { return null; } },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+};
+function getData(k, def=[]) { return STORE.get(k) || def; }
+function setData(k, v) { STORE.set(k, v); }
+
+// Init default admin
+function initDefaults() {
+  if (!STORE.get('users')) {
+    setData('users', [{ id:'1', username:'admin', name:'Administrator', password:'pilot2024', role:'admin' }]);
+  }
+  if (!STORE.get('settings')) {
+    setData('settings', { name:'Min Udlejnings App.', cvr:'', addr:'', city:'', phone:'', email:'' });
+  }
+}
+initDefaults();
+
+let currentUser = null;
+let currentStep = 1;
+let contractPhotos = [];
+let sigCtx = {};
+let drawing = {};
+let currentContractId = null;
+let currentContractData = {};
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const users = getData('users');
+  const user = users.find(x => x.username === u && x.password === p);
+  if (!user) { document.getElementById('loginErr').style.display='block'; return; }
+  currentUser = user;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('currentUserLabel').textContent = user.name || user.username;
+  if (user.role === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display='');
+  }
+  loadSettings();
+  renderDashboard();
+  renderVehicles();
+  renderContracts();
+  renderDrivers();
+  populateDriverSelect();
+  populateVehicleSelect();
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginErr').style.display='none';
+}
+
+// ═══════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='contracts') renderContracts();
+  if(id==='vehicles') renderVehicles();
+  if(id==='drivers') renderDrivers();
+  if(id==='users') renderUsers();
+  if(id==='biltjek') btLoadChecks();
+  if(id==='rapport') renderRapport();
+}
+
+async function scanDriverDocument(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+  const statusEl = document.getElementById('driverScanStatus');
+  statusEl.textContent = '⏳ Scanner kørekort...';
+  statusEl.style.color = 'var(--text2)';
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 500,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type||'image/jpeg', data: base64 } },
+            { type: 'text', text: `Dette er et kørekort. Udtræk oplysninger og svar KUN med JSON:
+{"name":"","birthdate":"","license_number":"","nationality":"","address":""}
+Tomme strenge for felter du ikke kan se. Nationalitet på dansk.` }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+      if (parsed.name)           document.getElementById('dr_name').value    = parsed.name;
+      if (parsed.license_number) document.getElementById('dr_license').value = parsed.license_number;
+      if (parsed.nationality)    document.getElementById('dr_nat').value     = parsed.nationality;
+      if (parsed.address)        document.getElementById('dr_addr').value    = parsed.address;
+      statusEl.textContent = '✅ Kørekort scannet'; statusEl.style.color = 'var(--green)';
+    } catch {
+      statusEl.textContent = '❌ Scanning fejlede — udfyld manuelt'; statusEl.style.color = 'var(--red)';
+    }
+    setTimeout(() => { statusEl.textContent=''; statusEl.style.color=''; }, 4000);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════════
+//  LEASER TYPE (Privat / Firma)
+// ═══════════════════════════════════════════════
+let currentLeaserType = 'privat';
+
+function setLeaserType(type) {
+  currentLeaserType = type;
+  const isF = type === 'firma';
+  document.getElementById('btn_privat').className = 'btn ' + (isF ? 'btn-ghost' : 'btn-accent');
+  document.getElementById('btn_firma').className  = 'btn ' + (isF ? 'btn-accent' : 'btn-ghost');
+  document.getElementById('leaserCVRBlock').style.display = isF ? '' : 'none';
+  document.getElementById('field_d_cpr').style.display    = isF ? 'none' : '';
+  document.getElementById('field_d_cvr').style.display    = isF ? '' : 'none';
+  document.getElementById('field_d_license').style.display= isF ? 'none' : '';
+  document.getElementById('field_d_contact').style.display= isF ? '' : 'none';
+  document.getElementById('label_d_name').textContent     = isF ? 'Firmanavn *' : 'Fulde navn *';
+  document.getElementById('btnScanVUB').style.display      = isF ? 'none' : '';
+}
+
+async function fetchLeaserCVR() {
+  const cvr = document.getElementById('d_cvr_input').value.trim();
+  if (cvr.length !== 8 || isNaN(cvr)) { showToast('Indtast et gyldigt 8-cifret CVR-nummer','error'); return; }
+  document.getElementById('leaserCVRSpinner').style.display='inline-block';
+  document.getElementById('leaserCVRResult').textContent='Henter...';
+  try {
+    const res = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    document.getElementById('d_name').value  = d.name || '';
+    document.getElementById('d_cvr').value   = cvr;
+    document.getElementById('d_addr').value  = d.address || '';
+    document.getElementById('d_city').value  = (d.zipcode||'') + ' ' + (d.city||'');
+    document.getElementById('d_phone').value = d.phone || '';
+    document.getElementById('d_email').value = d.email || '';
+    document.getElementById('leaserCVRResult').textContent = '✅ ' + (d.name||'');
+    document.getElementById('leaserCVRResult').style.color = 'var(--green)';
+  } catch {
+    document.getElementById('leaserCVRResult').textContent = '❌ Kunne ikke hente. Udfyld manuelt.';
+    document.getElementById('leaserCVRResult').style.color = 'var(--red)';
+  }
+  document.getElementById('leaserCVRSpinner').style.display='none';
+}
+
+// ═══════════════════════════════════════════════
+//  AI DOCUMENT SCANNING (kørekort / VUB)
+// ═══════════════════════════════════════════════
+async function scanDocument(event, docType) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  const statusEl = document.getElementById('scanStatus');
+  statusEl.textContent = '⏳ Scanner ' + (docType==='license' ? 'kørekort' : 'VUB-kort') + '...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+
+    const prompt = docType === 'license'
+      ? `Dette er et billede af et kørekort. Udtræk følgende oplysninger og svar KUN med JSON (ingen forklaring):
+{"name":"","birthdate":"","license_number":"","nationality":"","address":"","expiry":""}
+Brug tomme strenge for felter du ikke kan se. Nationalitet som landets navn på dansk.`
+      : `Dette er et billede af et VUB-kort (vognmandstilladelse/erhvervskørekort). Udtræk følgende og svar KUN med JSON:
+{"vub_number":"","name":"","expiry":"","tilladelse_number":""}
+Brug tomme strenge for felter du ikke kan se.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: prompt }
+            ]
+          }]
+        })
+      });
+
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+      const clean = text.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+
+      if (docType === 'license') {
+        if (parsed.name)           document.getElementById('d_name').value    = parsed.name;
+        if (parsed.license_number) document.getElementById('d_license').value = parsed.license_number;
+        if (parsed.nationality)    document.getElementById('d_nat').value     = parsed.nationality;
+        if (parsed.address)        document.getElementById('d_addr').value    = parsed.address;
+      } else {
+        if (parsed.vub_number)        document.getElementById('d_vub').value       = parsed.vub_number;
+        if (parsed.tilladelse_number) document.getElementById('d_tilladelse').value = parsed.tilladelse_number;
+        if (parsed.name && !document.getElementById('d_name').value)
+          document.getElementById('d_name').value = parsed.name;
+      }
+
+      statusEl.textContent = '✅ ' + (docType==='license' ? 'Kørekort' : 'VUB-kort') + ' scannet';
+      statusEl.style.color = 'var(--green)';
+      setTimeout(() => { statusEl.textContent=''; statusEl.style.color=''; }, 4000);
+
+    } catch (err) {
+      statusEl.textContent = '❌ Scanning fejlede — udfyld manuelt';
+      statusEl.style.color = 'var(--red)';
+      setTimeout(() => { statusEl.textContent=''; statusEl.style.color=''; }, 4000);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ═══════════════════════════════════════════════
+//  CVR API
+// ═══════════════════════════════════════════════
+async function fetchCVR() {
+  const cvr = document.getElementById('cvrInput').value.trim();
+  if (cvr.length !== 8 || isNaN(cvr)) { showToast('Indtast et gyldigt 8-cifret CVR-nummer', 'error'); return; }
+  document.getElementById('cvrSpinner').style.display='inline-block';
+  document.getElementById('cvrResult').textContent='Henter...';
+  try {
+    const res = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`);
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    document.getElementById('u_name').value = d.name || '';
+    document.getElementById('u_cvr').value = cvr;
+    document.getElementById('u_addr').value = (d.address || '') + (d.addressandnumber ? '' : '');
+    document.getElementById('u_city').value = (d.zipcode||'') + ' ' + (d.city||'');
+    document.getElementById('u_phone').value = d.phone || '';
+    document.getElementById('u_email').value = d.email || '';
+    document.getElementById('cvrResult').textContent = '✅ Oplysninger hentet fra CVR: ' + (d.name||'');
+    document.getElementById('cvrResult').style.color='var(--green)';
+  } catch {
+    document.getElementById('cvrResult').textContent='❌ Kunne ikke hente CVR-oplysninger. Udfyld manuelt.';
+    document.getElementById('cvrResult').style.color='var(--red)';
+  }
+  document.getElementById('cvrSpinner').style.display='none';
+}
+
+// ═══════════════════════════════════════════════
+//  WIZARD
+// ═══════════════════════════════════════════════
+function goStep(n) {
+  if (n === 2 && !validateStep1()) return;
+  if (n === 3 && !validateStep2()) return;
+  if (n === 4 && !validateStep3()) return;
+  if (n === 5 && !validateStep4()) return;
+  currentStep = n;
+  for(let i=1;i<=7;i++) {
+    const s = document.getElementById('step'+i);
+    if(s) s.style.display = (i===n)?'block':'none';
+    const ws = document.getElementById('ws'+i);
+    if(ws) ws.className = 'wizard-step' + (i===n?' active':'') + (i<n?' done':'');
+  }
+  if (n===6) initSignaturePads();
+  if (n===5) { contractPhotos=[]; document.getElementById('photoGrid').innerHTML = `<div class="add-photo-btn" onclick="document.getElementById('photoInput').click()"><div style="font-size:1.8rem">📷</div><div>Tilføj billede</div></div>`; }
+  window.scrollTo(0,0);
+}
+function validateStep1() {
+  if (!document.getElementById('u_name').value.trim()) { showToast('Firmanavn er påkrævet','error'); return false; } return true;
+}
+function validateStep2() {
+  if (!document.getElementById('d_name').value.trim()) { showToast('Lejers navn er påkrævet','error'); return false; }
+  if (currentLeaserType === 'privat' && !document.getElementById('d_license').value.trim()) { showToast('Kørekortnummer er påkrævet','error'); return false; }
+  if (document.getElementById('d_save').checked) saveDriverFromStep2();
+  return true;
+}
+function validateStep3() {
+  if (!document.getElementById('dr_name').value.trim()) { showToast('Førerens navn er påkrævet','error'); return false; }
+  if (!document.getElementById('dr_license').value.trim()) { showToast('Førerens kørekortnummer er påkrævet','error'); return false; }
+  return true;
+}
+function validateStep4() {
+  if (!document.getElementById('v_select').value) { showToast('Vælg en bil','error'); return false; }
+  if (!document.getElementById('c_pickup').value) { showToast('Afhentningsdato påkrævet','error'); return false; }
+  if (!document.getElementById('c_return').value) { showToast('Afleveringsdato påkrævet','error'); return false; }
+  return validateDates();
+}
+function validateDates() {
+  const p = document.getElementById('c_pickup').value;
+  const r = document.getElementById('c_return').value;
+  const err = document.getElementById('dateError');
+  if (p && r) {
+    const diff = (new Date(r)-new Date(p)) / 86400000;
+    if (diff <= 0) { err.textContent='Afleveringsdato skal være efter afhentningsdato'; err.style.display='block'; return false; }
+    if (diff > 30) { err.textContent='Maksimal udlejningsperiode er 30 dage'; err.style.display='block'; return false; }
+    err.style.display='none';
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════════════
+//  SIGNATURE
+// ═══════════════════════════════════════════════
+function initSignaturePads() {
+  ['sigLessor','sigLessee'].forEach(id => {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    sigCtx[id] = ctx;
+    drawing[id] = false;
+    ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.lineCap='round';
+    c.addEventListener('mousedown', e => { drawing[id]=true; ctx.beginPath(); const r=c.getBoundingClientRect(); ctx.moveTo(e.clientX-r.left, e.clientY-r.top); });
+    c.addEventListener('mousemove', e => { if(!drawing[id]) return; const r=c.getBoundingClientRect(); ctx.lineTo(e.clientX-r.left, e.clientY-r.top); ctx.stroke(); });
+    c.addEventListener('mouseup', () => drawing[id]=false);
+    c.addEventListener('mouseleave', () => drawing[id]=false);
+    c.addEventListener('touchstart', e => { e.preventDefault(); drawing[id]=true; ctx.beginPath(); const r=c.getBoundingClientRect(); const t=e.touches[0]; ctx.moveTo(t.clientX-r.left, t.clientY-r.top); }, {passive:false});
+    c.addEventListener('touchmove', e => { e.preventDefault(); if(!drawing[id]) return; const r=c.getBoundingClientRect(); const t=e.touches[0]; ctx.lineTo(t.clientX-r.left, t.clientY-r.top); ctx.stroke(); }, {passive:false});
+    c.addEventListener('touchend', () => drawing[id]=false);
+  });
+}
+function clearSig(id) { const c=document.getElementById(id); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+
+// ═══════════════════════════════════════════════
+//  PHOTOS
+// ═══════════════════════════════════════════════
+function handlePhotos(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      contractPhotos.push(ev.target.result);
+      renderPhotoGrid();
+    };
+    reader.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function renderPhotoGrid() {
+  const g = document.getElementById('photoGrid');
+  g.innerHTML = contractPhotos.map((src,i)=>`
+    <div class="photo-thumb"><img src="${src}"><button class="del-btn" onclick="removePhoto(${i})">✕</button></div>
+  `).join('') + `<div class="add-photo-btn" onclick="document.getElementById('photoInput').click()"><div style="font-size:1.8rem">📷</div><div>Tilføj billede</div></div>`;
+}
+function removePhoto(i) { contractPhotos.splice(i,1); renderPhotoGrid(); }
+
+// ═══════════════════════════════════════════════
+//  FINALIZE CONTRACT
+// ═══════════════════════════════════════════════
+function finalizeContract() {
+  const vehicles = getData('vehicles');
+  const vid = document.getElementById('v_select').value;
+  const veh = vehicles.find(v=>v.id===vid);
+
+  const sigL = document.getElementById('sigLessor').toDataURL();
+  const sigD = document.getElementById('sigLessee').toDataURL();
+
+  const id = 'C' + Date.now();
+  const contract = {
+    id, num: 'K-' + String(getData('contracts').length+1).padStart(4,'0'),
+    created: new Date().toISOString(),
+    status: 'active',
+    lessor: {
+      name: document.getElementById('u_name').value,
+      cvr: document.getElementById('u_cvr').value,
+      addr: document.getElementById('u_addr').value,
+      city: document.getElementById('u_city').value,
+      phone: document.getElementById('u_phone').value,
+      email: document.getElementById('u_email').value,
+    },
+    driver: {
+      leaserType: currentLeaserType,
+      name: document.getElementById('d_name').value,
+      cpr: document.getElementById('d_cpr').value,
+      cvr: document.getElementById('d_cvr').value,
+      contact: document.getElementById('d_contact').value,
+      addr: document.getElementById('d_addr').value,
+      city: document.getElementById('d_city').value,
+      phone: document.getElementById('d_phone').value,
+      email: document.getElementById('d_email').value,
+      license: document.getElementById('d_license').value,
+      vub: document.getElementById('d_vub').value,
+      tilladelse: document.getElementById('d_tilladelse').value,
+      nat: document.getElementById('d_nat').value,
+    },
+    chauffeur: {
+      name: document.getElementById('dr_name').value,
+      cpr: document.getElementById('dr_cpr').value,
+      addr: document.getElementById('dr_addr').value,
+      city: document.getElementById('dr_city').value,
+      phone: document.getElementById('dr_phone').value,
+      email: document.getElementById('dr_email').value,
+      license: document.getElementById('dr_license').value,
+      nat: document.getElementById('dr_nat').value,
+    },
+    vehicle: {
+      id: vid,
+      brand: veh ? veh.brand : '',
+      model: veh ? veh.model : '',
+      reg: document.getElementById('v_reg').value,
+      color: veh ? veh.color : '',
+      vin: veh ? veh.vin : '',
+    },
+    rental: {
+      pickup: document.getElementById('c_pickup').value,
+      return: document.getElementById('c_return').value,
+      kmOut: document.getElementById('c_km_out').value,
+      fuelOut: document.getElementById('c_fuel_out').value,
+      kmIn: '', fuelIn: '',
+      price: document.getElementById('c_price').value,
+      deposit: document.getElementById('c_deposit').value,
+      selvrisiko: document.getElementById('c_selvrisiko').value,
+      selvrisikoNote: document.getElementById('c_selvrisiko_note').value,
+      notes: document.getElementById('c_notes').value,
+    },
+    photos: contractPhotos.slice(),
+    signatures: { lessor: sigL, lessee: sigD },
+    createdBy: currentUser ? currentUser.username : 'admin',
+  };
+
+  // Mark vehicle as rented
+  const updated = vehicles.map(v => v.id===vid ? {...v, status:'rented', currentContract:id} : v);
+  setData('vehicles', updated);
+
+  const contracts = getData('contracts');
+  contracts.push(contract);
+  setData('contracts', contracts);
+
+  currentContractData = contract;
+  document.getElementById('contractPreview').innerHTML = buildContractHTML(contract);
+  goStep(7);
+  showToast('Kontrakt ' + contract.num + ' oprettet!', 'success');
+  renderVehicles();
+  populateVehicleSelect();
+}
+
+// ═══════════════════════════════════════════════
+//  CONTRACT HTML
+// ═══════════════════════════════════════════════
+function buildContractHTML(c) {
+  const sett = getData('settings', {});
+  const days = Math.ceil((new Date(c.rental.return)-new Date(c.rental.pickup))/86400000);
+  const total = days * (parseFloat(c.rental.price)||0);
+  const isFirma = c.driver.leaserType === 'firma';
+  const idLabel = isFirma ? 'CVR-nr.' : 'CPR/ID';
+  const idVal   = isFirma ? (c.driver.cvr||'') : (c.driver.cpr||'');
+
+  const photosHTML = (c.photos && c.photos.length) ? `
+    <table><tr><th colspan="4" style="background:#1a2a4a;color:#e8a020">BILLEDER AF KØRETØJ VED AFHENTNING</th></tr></table>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+      ${c.photos.map(src=>`<img src="${src}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #ccc;border-radius:4px">`).join('')}
+    </div>` : '';
+
+  const selvrisikoRow = c.rental.selvrisiko ? `
+    <tr><th>Selvrisiko</th><th colspan="3">${c.rental.selvrisiko} DKK${c.rental.selvrisikoNote?' — '+c.rental.selvrisikoNote:''}</th></tr>` : '';
+
+  return `<div class="contract-paper" id="printArea">
+    <h2>Min Udlejnings App.</h2>
+    <div class="c-sub">UDLEJNINGSKONTRAKT</div>
+    <table><tr><th colspan="4" style="background:#0a1628;color:#e8a020;text-align:center">KONTRAKTNUMMER: ${c.num} &nbsp;|&nbsp; DATO: ${fmtDT(c.created)}</th></tr></table>
+    <table>
+      <tr><th colspan="2">UDLEJER</th><th colspan="2">LEJER${isFirma?' / FIRMA':' / CHAUFFØR'}</th></tr>
+      <tr><td><b>Firma:</b></td><td>${c.lessor.name}</td><td><b>${isFirma?'Firma:':'Navn:'}</b></td><td>${c.driver.name}</td></tr>
+      <tr><td><b>CVR:</b></td><td>${c.lessor.cvr}</td><td><b>${idLabel}:</b></td><td>${idVal}</td></tr>
+      <tr><td><b>Adresse:</b></td><td>${c.lessor.addr}, ${c.lessor.city}</td><td><b>Adresse:</b></td><td>${c.driver.addr}, ${c.driver.city}</td></tr>
+      <tr><td><b>Tlf:</b></td><td>${c.lessor.phone}</td><td><b>Tlf:</b></td><td>${c.driver.phone}</td></tr>
+      <tr><td><b>Email:</b></td><td>${c.lessor.email}</td><td><b>Email:</b></td><td>${c.driver.email}</td></tr>
+      ${isFirma && c.driver.contact ? `<tr><td></td><td></td><td><b>Kontaktperson:</b></td><td>${c.driver.contact}</td></tr>`:''}
+      ${!isFirma ? `<tr><td></td><td></td><td><b>Kørekort:</b></td><td>${c.driver.license}</td></tr>`:''}
+      <tr><td></td><td></td><td><b>VUB-nr:</b></td><td>${c.driver.vub}</td></tr>
+      <tr><td></td><td></td><td><b>Tilladelse:</b></td><td>${c.driver.tilladelse}</td></tr>
+    </table>
+    ${c.chauffeur ? `<table>
+      <tr><th colspan="4" style="background:#1a2a4a;color:#e8a020">FØRER AF KØRETØJET</th></tr>
+      <tr><th>Navn</th><th>CPR/ID</th><th>Kørekort</th><th>Nationalitet</th></tr>
+      <tr><td>${c.chauffeur.name}</td><td>${c.chauffeur.cpr}</td><td>${c.chauffeur.license}</td><td>${c.chauffeur.nat}</td></tr>
+      <tr><td colspan="2"><b>Adresse:</b> ${c.chauffeur.addr}, ${c.chauffeur.city}</td>
+          <td><b>Tlf:</b> ${c.chauffeur.phone}</td>
+          <td><b>Email:</b> ${c.chauffeur.email}</td></tr>
+    </table>` : ''}
+    <table>
+      <tr><th colspan="4" style="background:#1a2a4a;color:#e8a020">KØRETØJ</th></tr>
+      <tr><th>Mærke/Model</th><th>Reg.nr.</th><th>Farve</th><th>VIN</th></tr>
+      <tr><td>${c.vehicle.brand} ${c.vehicle.model}</td><td><b>${c.vehicle.reg}</b></td><td>${c.vehicle.color}</td><td>${c.vehicle.vin}</td></tr>
+    </table>
+    <table>
+      <tr><th colspan="4" style="background:#1a2a4a;color:#e8a020">UDLEJNINGSPERIODE & ØKONOMI</th></tr>
+      <tr><th>Afhentning</th><th>Forventet aflevering</th><th>Antal dage</th><th>Km ved afhentning</th></tr>
+      <tr><td>${fmtDT(c.rental.pickup)}</td><td>${fmtDT(c.rental.return)}</td><td>${days} dage</td><td>${c.rental.kmOut} km</td></tr>
+      <tr><th>Brændstof afhentning</th><th>Dagspris</th><th>Depositum</th><th>Estimeret total</th></tr>
+      <tr><td>${c.rental.fuelOut}</td><td>${c.rental.price ? c.rental.price+' DKK' : '-'}</td><td>${c.rental.deposit ? c.rental.deposit+' DKK' : '-'}</td><td><b>${total ? total.toFixed(2)+' DKK' : '-'}</b></td></tr>
+      ${selvrisikoRow}
+    </table>
+    ${c.rental.notes ? `<p style="font-size:.82rem;color:#555;border:1px solid #ddd;padding:8px;border-radius:4px;margin-bottom:10px"><b>Bemærkninger:</b> ${c.rental.notes}</p>` : ''}
+    ${photosHTML}
+    <div class="sig-block">
+      <div class="sig-line">
+        <img src="${c.signatures.lessor}" style="height:60px;max-width:100%"><br>
+        <b>Udlejer:</b> ${c.lessor.name}
+      </div>
+      <div class="sig-line">
+        <img src="${c.signatures.lessee}" style="height:60px;max-width:100%"><br>
+        <b>Lejer:</b> ${c.driver.name}
+      </div>
+    </div>
+    <p style="font-size:.72rem;color:#888;margin-top:12px;text-align:center">Generet af Min Udlejnings App. — ${fmtDT(new Date().toISOString())}</p>
+  </div>`;
+}
+
+function fmtDT(s) {
+  if(!s) return '—';
+  const d = new Date(s);
+  if(isNaN(d)) return s;
+  return d.toLocaleDateString('da-DK') + ' ' + d.toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtD(s) {
+  if(!s) return '—'; const d=new Date(s); if(isNaN(d)) return s;
+  return d.toLocaleDateString('da-DK');
+}
+
+function printContract() {
+  const html = document.getElementById('printArea') ? document.getElementById('printArea').outerHTML : buildContractHTML(currentContractData);
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:20px}.contract-paper{padding:20px}table{border-collapse:collapse;width:100%}table td,table th{border:1px solid #ccc;padding:6px;font-size:12px}h2{text-align:center}.sig-block{display:flex;gap:24px;margin-top:24px}.sig-line{flex:1;border-top:1px solid #333;padding-top:6px}</style></head><body>${html}</body></html>`);
+  w.document.close(); w.print();
+}
+let printContractId = null;
+function printContractById() {
+  const c = getData('contracts').find(x=>x.id===currentContractId);
+  if(c) { currentContractData=c; printContract(); }
+}
+function emailContract() {
+  const c = currentContractData;
+  window.location.href = `mailto:${c.driver.email}?subject=Udlejningskontrakt ${c.num}&body=Kære ${c.driver.name},%0D%0A%0D%0AVedhæftet finder du udlejningskontrakten for ${c.vehicle.brand} ${c.vehicle.model} (${c.vehicle.reg}).%0D%0A%0D%0APeriode: ${fmtDT(c.rental.pickup)} - ${fmtDT(c.rental.return)}%0D%0A%0D%0AMed venlig hilsen%0D%0A${c.lessor.name}`;
+}
+function emailContractById() {
+  const c = getData('contracts').find(x=>x.id===currentContractId);
+  if(c) { currentContractData=c; emailContract(); }
+}
+function exportContract() {
+  dlJSON(currentContractData, 'kontrakt-'+currentContractData.num+'.json');
+}
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const contracts = getData('contracts');
+  const vehicles = getData('vehicles');
+  const now = new Date();
+  const active = contracts.filter(c=>c.status==='active');
+  const overdue = active.filter(c=>new Date(c.rental.return)<now);
+  const checks = getData('checks');
+  const btDmg = checks.filter(c=>c.damages&&c.damages.length).length;
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${contracts.length}</div><div class="stat-label">Kontrakter</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${active.length}</div><div class="stat-label">Aktive</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${overdue.length}</div><div class="stat-label">Overskredet</div></div>
+    <div class="stat-card"><div class="stat-num">${vehicles.length}</div><div class="stat-label">Biler</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue2)">${checks.length}</div><div class="stat-label">Biltjek</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${btDmg}</div><div class="stat-label">Biltjek m. skader</div></div>
+  `;
+  const tbody = document.getElementById('dashActiveBody');
+  if(!active.length) { tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔑</div>Ingen aktive kontrakter</div></td></tr>`; return; }
+  tbody.innerHTML = active.map(c=>{
+    const od = new Date(c.rental.return)<now;
+    return `<tr>
+      <td><b>${c.vehicle.reg}</b> <span style="color:var(--text2);font-size:.82rem">${c.vehicle.brand} ${c.vehicle.model}</span></td>
+      <td>${c.driver.name}</td>
+      <td>${fmtDT(c.rental.pickup)}</td>
+      <td>${fmtDT(c.rental.return)}</td>
+      <td>${od?'<span class="badge badge-red">Overskredet</span>':'<span class="badge badge-green">Aktiv</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openContractDetail('${c.id}')">Se</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  CONTRACTS PAGE
+// ═══════════════════════════════════════════════
+function renderContracts() {
+  const q = (document.getElementById('contractSearch')||{}).value||'';
+  const f = (document.getElementById('contractFilter')||{}).value||'';
+  const now = new Date();
+  let list = getData('contracts');
+  if(q) list = list.filter(c=>JSON.stringify(c).toLowerCase().includes(q.toLowerCase()));
+  if(f==='active') list = list.filter(c=>c.status==='active'&&new Date(c.rental.return)>=now);
+  if(f==='returned') list = list.filter(c=>c.status==='returned');
+  if(f==='overdue') list = list.filter(c=>c.status==='active'&&new Date(c.rental.return)<now);
+  list = list.slice().reverse();
+  const tbody = document.getElementById('contractsBody');
+  if(!list.length) { tbody.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div>Ingen kontrakter fundet</div></td></tr>`; return; }
+  tbody.innerHTML = list.map(c=>{
+    const od = c.status==='active'&&new Date(c.rental.return)<now;
+    const badge = c.status==='returned'?'<span class="badge badge-blue">Afsluttet</span>':od?'<span class="badge badge-red">Overskredet</span>':'<span class="badge badge-green">Aktiv</span>';
+    return `<tr>
+      <td><b>${c.num}</b></td>
+      <td>${c.vehicle.reg} <span style="font-size:.78rem;color:var(--text2)">${c.vehicle.brand}</span></td>
+      <td>${c.driver.name}</td>
+      <td>${fmtD(c.rental.pickup)}</td>
+      <td>${fmtD(c.rental.return)}</td>
+      <td>${badge}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openContractDetail('${c.id}')">Vis</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openContractDetail(id) {
+  currentContractId = id;
+  const c = getData('contracts').find(x=>x.id===id);
+  if(!c) return;
+  const html = buildContractHTML(c);
+  document.getElementById('contractDetailContent').innerHTML = html;
+  document.getElementById('returnBtn').style.display = c.status==='active' ? '' : 'none';
+  openModal('contractDetailModal');
+}
+
+function returnVehicle() {
+  const contracts = getData('contracts');
+  const idx = contracts.findIndex(c=>c.id===currentContractId);
+  if(idx<0) return;
+  const kmIn = prompt('KM stand ved aflevering:','');
+  contracts[idx].status = 'returned';
+  contracts[idx].rental.kmIn = kmIn||'';
+  contracts[idx].rental.returnedAt = new Date().toISOString();
+  setData('contracts', contracts);
+  // free vehicle
+  const vid = contracts[idx].vehicle.id;
+  const vehicles = getData('vehicles');
+  const vi = vehicles.findIndex(v=>v.id===vid);
+  if(vi>=0) { vehicles[vi].status='available'; vehicles[vi].currentContract=null; setData('vehicles',vehicles); }
+  closeModal('contractDetailModal');
+  renderContracts(); renderDashboard(); renderVehicles();
+  populateVehicleSelect();
+  showToast('Køretøj afleveret og kontrakt afsluttet','success');
+}
+
+// ═══════════════════════════════════════════════
+//  VEHICLES
+// ═══════════════════════════════════════════════
+function renderVehicles() {
+  const vehicles = getData('vehicles');
+  const grid = document.getElementById('vehicleGrid');
+  if(!vehicles.length) { grid.innerHTML=`<div class="card" style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🚐</div>Ingen biler registreret endnu.<br><button class="btn btn-accent mt-16" onclick="openVehicleModal()">+ Tilføj første bil</button></div></div>`; return; }
+  grid.innerHTML = vehicles.map(v=>`
+    <div class="card">
+      <div style="font-size:2rem;margin-bottom:8px">🚐</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:1px">${v.brand} ${v.model}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;color:var(--accent);font-weight:900">${v.reg}</div>
+      <div class="mt-8">${v.status==='rented'?'<span class="badge badge-red">Udlejet</span>':'<span class="badge badge-green">Ledig</span>'}</div>
+      <div style="color:var(--text2);font-size:.8rem;margin-top:6px">${v.color||''} · ${v.year||''} · ${v.fuel||''}</div>
+      ${v.payload?`<div style="color:var(--text2);font-size:.78rem">Nyttelast: ${v.payload} kg</div>`:''}
+      ${v.price?`<div style="color:var(--accent);font-size:.85rem;font-weight:600">${v.price} DKK/dag</div>`:''}
+      <div class="flex gap-8 mt-16" style="flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="openVehicleModal('${v.id}')">Rediger</button>
+        <button class="btn btn-blue btn-sm" onclick="btShowHistory('vehicle','${v.id}','${v.reg}')">📋 Biltjek</button>
+        <button class="btn btn-red btn-sm" onclick="deleteVehicle('${v.id}')">Slet</button>
+      </div>
+    </div>
+  `).join('');
+}
+function openVehicleModal(id) {
+  document.getElementById('vModalTitle').textContent = id ? 'Rediger Bil' : 'Tilføj Bil';
+  document.getElementById('v_editId').value = id||'';
+  const fields = ['brand','model','reg','year','color','vin','km','fuel','payload','price','notes'];
+  fields.forEach(f => document.getElementById('vm_'+f).value='');
+  if(id) {
+    const v = getData('vehicles').find(x=>x.id===id);
+    if(v) fields.forEach(f => document.getElementById('vm_'+f).value = v[f]||'');
+  }
+  openModal('vehicleModal');
+}
+function saveVehicle() {
+  const id = document.getElementById('v_editId').value;
+  const brand = document.getElementById('vm_brand').value.trim();
+  const reg = document.getElementById('vm_reg').value.trim().toUpperCase();
+  if(!brand||!reg) { showToast('Mærke og reg.nr. er påkrævet','error'); return; }
+  const obj = {
+    id: id||('V'+Date.now()),
+    brand, model:document.getElementById('vm_model').value,
+    reg, year:document.getElementById('vm_year').value,
+    color:document.getElementById('vm_color').value,
+    vin:document.getElementById('vm_vin').value,
+    km:document.getElementById('vm_km').value,
+    fuel:document.getElementById('vm_fuel').value,
+    payload:document.getElementById('vm_payload').value,
+    price:document.getElementById('vm_price').value,
+    notes:document.getElementById('vm_notes').value,
+    status: id ? (getData('vehicles').find(v=>v.id===id)||{}).status||'available' : 'available',
+    currentContract: id ? (getData('vehicles').find(v=>v.id===id)||{}).currentContract||null : null,
+  };
+  const vehicles = getData('vehicles');
+  if(id) { const i=vehicles.findIndex(v=>v.id===id); if(i>=0) vehicles[i]=obj; }
+  else vehicles.push(obj);
+  setData('vehicles', vehicles);
+  closeModal('vehicleModal'); renderVehicles(); populateVehicleSelect();
+  showToast('Bil gemt','success');
+}
+function deleteVehicle(id) {
+  const v = getData('vehicles').find(x=>x.id===id);
+  if(v && v.status==='rented') { showToast('Bil er udlejet — afslut kontrakten først','error'); return; }
+  if(!confirm('Slet bil?')) return;
+  setData('vehicles', getData('vehicles').filter(x=>x.id!==id));
+  renderVehicles(); populateVehicleSelect();
+  showToast('Bil slettet','success');
+}
+
+function populateVehicleSelect() {
+  const vehicles = getData('vehicles');
+  const sel = document.getElementById('v_select');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">-- Vælg bil --</option>' +
+    vehicles.map(v=>`<option value="${v.id}" ${v.status==='rented'?'disabled':''}>
+      ${v.brand} ${v.model} — ${v.reg}${v.status==='rented'?' (Udlejet)':''}
+    </option>`).join('');
+}
+function onVehicleSelect() {
+  const vid = document.getElementById('v_select').value;
+  const v = getData('vehicles').find(x=>x.id===vid);
+  document.getElementById('v_reg').value = v ? v.reg : '';
+  if(v && v.price) document.getElementById('c_price').value = v.price;
+}
+
+// ═══════════════════════════════════════════════
+//  DRIVERS
+// ═══════════════════════════════════════════════
+function renderDrivers() {
+  const q = (document.getElementById('driverSearch')||{}).value||'';
+  let drivers = getData('drivers');
+  if(q) drivers = drivers.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase()));
+  const contracts = getData('contracts');
+  const tbody = document.getElementById('driversBody');
+  if(!drivers.length) { tbody.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">👤</div>Ingen lejere endnu</div></td></tr>`; return; }
+  tbody.innerHTML = drivers.map(d=>{
+    const active = contracts.filter(c=>c.status==='active'&&c.driver.name===d.name).map(c=>c.vehicle.reg).join(', ');
+    return `<tr>
+      <td><b>${d.name}</b><br><span style="font-size:.78rem;color:var(--text2)">${d.nat||''}</span></td>
+      <td>${d.phone}</td>
+      <td>${d.license}</td>
+      <td>${d.vub}</td>
+      <td>${d.tilladelse}</td>
+      <td>${active||'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openDriverModal('${d.id}')">Rediger</button>
+      <button class="btn btn-red btn-sm" onclick="deleteDriver('${d.id}')">Slet</button></td>
+    </tr>`;
+  }).join('');
+}
+function openDriverModal(id) {
+  document.getElementById('dModalTitle').textContent = id?'Rediger Lejer':'Tilføj Lejer';
+  document.getElementById('dm_editId').value=id||'';
+  ['name','cpr','addr','city','phone','email','license','vub','til','nat'].forEach(f=>document.getElementById('dm_'+f).value='');
+  if(id) {
+    const d=getData('drivers').find(x=>x.id===id);
+    if(d) {
+      document.getElementById('dm_name').value=d.name||'';
+      document.getElementById('dm_cpr').value=d.cpr||'';
+      document.getElementById('dm_addr').value=d.addr||'';
+      document.getElementById('dm_city').value=d.city||'';
+      document.getElementById('dm_phone').value=d.phone||'';
+      document.getElementById('dm_email').value=d.email||'';
+      document.getElementById('dm_license').value=d.license||'';
+      document.getElementById('dm_vub').value=d.vub||'';
+      document.getElementById('dm_til').value=d.tilladelse||'';
+      document.getElementById('dm_nat').value=d.nat||'';
+    }
+  }
+  openModal('driverModal');
+}
+function saveDriver() {
+  const id=document.getElementById('dm_editId').value;
+  const name=document.getElementById('dm_name').value.trim();
+  if(!name) { showToast('Navn er påkrævet','error'); return; }
+  const obj={
+    id:id||('D'+Date.now()), name,
+    cpr:document.getElementById('dm_cpr').value,
+    addr:document.getElementById('dm_addr').value,
+    city:document.getElementById('dm_city').value,
+    phone:document.getElementById('dm_phone').value,
+    email:document.getElementById('dm_email').value,
+    license:document.getElementById('dm_license').value,
+    vub:document.getElementById('dm_vub').value,
+    tilladelse:document.getElementById('dm_til').value,
+    nat:document.getElementById('dm_nat').value,
+  };
+  const drivers=getData('drivers');
+  if(id){const i=drivers.findIndex(d=>d.id===id);if(i>=0)drivers[i]=obj;}else drivers.push(obj);
+  setData('drivers',drivers);
+  closeModal('driverModal'); renderDrivers(); populateDriverSelect();
+  showToast('Lejer gemt','success');
+}
+function saveDriverFromStep2() {
+  const obj={
+    id:'D'+Date.now(),
+    name:document.getElementById('d_name').value,
+    cpr:document.getElementById('d_cpr').value,
+    addr:document.getElementById('d_addr').value,
+    city:document.getElementById('d_city').value,
+    phone:document.getElementById('d_phone').value,
+    email:document.getElementById('d_email').value,
+    license:document.getElementById('d_license').value,
+    vub:document.getElementById('d_vub').value,
+    tilladelse:document.getElementById('d_tilladelse').value,
+    nat:document.getElementById('d_nat').value,
+  };
+  const drivers=getData('drivers');
+  drivers.push(obj); setData('drivers',drivers); populateDriverSelect();
+}
+function deleteDriver(id) {
+  if(!confirm('Slet lejer?')) return;
+  setData('drivers', getData('drivers').filter(x=>x.id!==id));
+  renderDrivers(); populateDriverSelect(); showToast('Lejer slettet','success');
+}
+function populateDriverSelect() {
+  const drivers=getData('drivers');
+  const sel=document.getElementById('driverSelect');
+  if(!sel) return;
+  sel.innerHTML='<option value="">-- Ny lejer / Søg --</option>'+
+    drivers.map(d=>`<option value="${d.id}">${d.name} — ${d.license}</option>`).join('');
+}
+function fillDriverFromSelect() {
+  const id=document.getElementById('driverSelect').value;
+  if(!id) return;
+  const d=getData('drivers').find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById('d_name').value=d.name||'';
+  document.getElementById('d_cpr').value=d.cpr||'';
+  document.getElementById('d_addr').value=d.addr||'';
+  document.getElementById('d_city').value=d.city||'';
+  document.getElementById('d_phone').value=d.phone||'';
+  document.getElementById('d_email').value=d.email||'';
+  document.getElementById('d_license').value=d.license||'';
+  document.getElementById('d_vub').value=d.vub||'';
+  document.getElementById('d_tilladelse').value=d.tilladelse||'';
+  document.getElementById('d_nat').value=d.nat||'';
+}
+
+// ═══════════════════════════════════════════════
+//  USERS
+// ═══════════════════════════════════════════════
+function renderUsers() {
+  const users=getData('users');
+  document.getElementById('usersBody').innerHTML=users.map(u=>`<tr>
+    <td><b>${u.username}</b></td>
+    <td>${u.name||'—'}</td>
+    <td>${u.role==='admin'?'<span class="badge badge-yellow">Administrator</span>':'<span class="badge badge-blue">Biladministrator</span>'}</td>
+    <td>
+      <button class="btn btn-ghost btn-sm" onclick="openUserModal('${u.id}')">Rediger</button>
+      ${u.id!=='1'?`<button class="btn btn-red btn-sm" onclick="deleteUser('${u.id}')">Slet</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+function openUserModal(id) {
+  document.getElementById('uModalTitle').textContent=id?'Rediger Bruger':'Opret Bruger';
+  document.getElementById('um_editId').value=id||'';
+  document.getElementById('um_username').value='';
+  document.getElementById('um_name').value='';
+  document.getElementById('um_pass').value='';
+  document.getElementById('um_role').value='user';
+  if(id) {
+    const u=getData('users').find(x=>x.id===id);
+    if(u){document.getElementById('um_username').value=u.username;document.getElementById('um_name').value=u.name||'';document.getElementById('um_role').value=u.role;}
+  }
+  openModal('userModal');
+}
+function saveUser() {
+  const id=document.getElementById('um_editId').value;
+  const username=document.getElementById('um_username').value.trim();
+  const pass=document.getElementById('um_pass').value;
+  if(!username){showToast('Brugernavn er påkrævet','error');return;}
+  const users=getData('users');
+  if(!id && users.find(u=>u.username===username)){showToast('Brugernavn er allerede i brug','error');return;}
+  const obj={
+    id:id||('U'+Date.now()),
+    username,
+    name:document.getElementById('um_name').value,
+    password:pass||(id?(users.find(u=>u.id===id)||{}).password:''),
+    role:document.getElementById('um_role').value
+  };
+  if(id){const i=users.findIndex(u=>u.id===id);if(i>=0)users[i]={...users[i],...obj,password:pass||users[i].password};}
+  else users.push(obj);
+  setData('users',users); closeModal('userModal'); renderUsers();
+  showToast('Bruger gemt','success');
+}
+function deleteUser(id) {
+  if(!confirm('Slet bruger?'))return;
+  setData('users',getData('users').filter(u=>u.id!==id));
+  renderUsers(); showToast('Bruger slettet','success');
+}
+
+// ═══════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════
+function loadSettings() {
+  const s=getData('settings',{});
+  document.getElementById('s_name').value=s.name||'';
+  document.getElementById('s_cvr').value=s.cvr||'';
+  document.getElementById('s_addr').value=s.addr||'';
+  document.getElementById('s_city').value=s.city||'';
+  document.getElementById('s_phone').value=s.phone||'';
+  document.getElementById('s_email').value=s.email||'';
+}
+function saveSettings() {
+  setData('settings',{
+    name:document.getElementById('s_name').value,
+    cvr:document.getElementById('s_cvr').value,
+    addr:document.getElementById('s_addr').value,
+    city:document.getElementById('s_city').value,
+    phone:document.getElementById('s_phone').value,
+    email:document.getElementById('s_email').value,
+  });
+  showToast('Indstillinger gemt','success');
+}
+function confirmReset() {
+  if(!confirm('⚠️ Er du sikker? Dette sletter ALLE data. Dette kan ikke fortrydes!')) return;
+  ['contracts','vehicles','drivers','checks'].forEach(k=>localStorage.removeItem(k));
+  renderDashboard(); renderVehicles(); renderContracts(); renderDrivers();
+  showToast('Alle data nulstillet','success');
+}
+
+// ═══════════════════════════════════════════════
+//  IMPORT / EXPORT
+// ═══════════════════════════════════════════════
+function exportAllData() {
+  const data={
+    contracts:getData('contracts'),
+    vehicles:getData('vehicles'),
+    drivers:getData('drivers'),
+    checks:getData('checks'),
+    settings:getData('settings',{}),
+    exportedAt:new Date().toISOString(),
+  };
+  dlJSON(data,'pilot-udlejning-backup-'+new Date().toISOString().slice(0,10)+'.json');
+}
+function importData() { document.getElementById('importInput').click(); }
+function handleImport(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const d=JSON.parse(ev.target.result);
+      if(d.contracts) setData('contracts',d.contracts);
+      if(d.vehicles) setData('vehicles',d.vehicles);
+      if(d.drivers) setData('drivers',d.drivers);
+      if(d.checks) setData('checks',d.checks);
+      if(d.settings) setData('settings',d.settings);
+      renderAll();
+      showToast('Data importeret','success');
+    } catch { showToast('Ugyldigt filformat','error'); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+function renderAll() { renderDashboard(); renderVehicles(); renderContracts(); renderDrivers(); populateVehicleSelect(); populateDriverSelect(); }
+function dlJSON(data, fname) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=fname; a.click();
+}
+
+// ═══════════════════════════════════════════════
+//  WIZARD RESET
+// ═══════════════════════════════════════════════
+function resetWizard() {
+  currentContractData={};
+  contractPhotos=[];
+  currentLeaserType='privat';
+  goStep(1);
+  ['u_name','u_cvr','u_addr','u_city','u_phone','u_email',
+   'd_name','d_cpr','d_cvr','d_cvr_input','d_contact','d_addr','d_city','d_phone','d_email','d_license','d_vub','d_tilladelse','d_nat',
+   'dr_name','dr_cpr','dr_addr','dr_city','dr_phone','dr_email','dr_license','dr_nat',
+   'c_pickup','c_return','c_km_out','c_price','c_deposit','c_selvrisiko','c_selvrisiko_note','c_notes',
+   'cvrInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const cr=document.getElementById('cvrResult'); if(cr) cr.textContent='';
+  const lr=document.getElementById('leaserCVRResult'); if(lr) lr.textContent='';
+  document.getElementById('v_select').value='';
+  document.getElementById('v_reg').value='';
+  document.getElementById('c_fuel_out').value='Fuld';
+  setLeaserType('privat');
+  populateVehicleSelect(); populateDriverSelect();
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if(e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+});
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+(type||'');
+  setTimeout(()=>t.className='',3000);
+}
+
+
+// ═══════════════════════════════════════════════
+//  BILTJEK
+// ═══════════════════════════════════════════════
+let btCurrentDamages = [];
+let btCurrentPhotos  = [];
+let btSelectedArea   = null;
+let btEditingId      = null;
+
+function btStartNew() {
+  btEditingId = null;
+  btCurrentDamages = [];
+  btCurrentPhotos  = [];
+  document.getElementById('btCheckTitle').textContent = 'Nyt biltjek';
+  document.getElementById('btCondition').value = '';
+  document.getElementById('btDamageList').innerHTML = '';
+  document.getElementById('btPhotoPreview').innerHTML = '';
+  btPopulateSelects();
+  btRenderSketch();
+  openModal('btCheckModal');
+}
+
+function btEditCheck(id) {
+  const c = getData('checks').find(x => x.id === id);
+  if (!c) return;
+  btEditingId = id;
+  btCurrentDamages = (c.damages || []).slice();
+  btCurrentPhotos  = (c.photos  || []).slice();
+  document.getElementById('btCheckTitle').textContent = 'Rediger biltjek';
+  document.getElementById('btCondition').value = c.condition || '';
+  btPopulateSelects(c.vehicleId, c.driverId);
+  btRenderSketch();
+  btUpdateDamageList();
+  btRenderPhotos();
+  openModal('btCheckModal');
+}
+
+function btPopulateSelects(selVId, selDId) {
+  const vehicles = getData('vehicles');
+  const drivers  = getData('drivers');
+  document.getElementById('btVehicle').innerHTML =
+    '<option value="">-- Vælg bil --</option>' +
+    vehicles.map(v => `<option value="${v.id}" ${v.id==selVId?'selected':''}>${v.reg} — ${v.brand||''} ${v.model||''}</option>`).join('');
+  document.getElementById('btDriver').innerHTML =
+    '<option value="">-- Vælg chauffør --</option>' +
+    drivers.map(d => `<option value="${d.id}" ${d.id==selDId?'selected':''}>${d.name}</option>`).join('');
+}
+
+function btRenderSketch() {
+  const areas = [
+    {id:'front', name:'Front'},
+    {id:'rear',  name:'Bag'},
+    {id:'left',  name:'Venstre side'},
+    {id:'right', name:'Højre side'},
+    {id:'roof',  name:'Tag'},
+    {id:'floor', name:'Bund/undervogn'}
+  ];
+  document.getElementById('btSketchGrid').innerHTML = areas.map(a => {
+    const dmg = btCurrentDamages.some(d => d.area === a.id);
+    return `<button class="sketch-btn-bt ${dmg?'damaged':''}" onclick="btOpenDamageForm('${a.id}','${a.name}')">${a.name}${dmg?' 🔴':''}</button>`;
+  }).join('');
+}
+
+function btOpenDamageForm(areaId, areaName) {
+  btSelectedArea = {id: areaId, name: areaName};
+  document.getElementById('btDamageAreaName').textContent = 'Skade: ' + areaName;
+  const existing = btCurrentDamages.find(d => d.area === areaId);
+  document.getElementById('btDamageDesc').value = existing ? existing.desc : '';
+  openModal('btDamageModal');
+}
+
+function btAddDamage() {
+  const desc = document.getElementById('btDamageDesc').value.trim();
+  if (!desc) { showToast('Beskrivelse påkrævet','error'); return; }
+  btCurrentDamages = btCurrentDamages.filter(d => d.area !== btSelectedArea.id);
+  btCurrentDamages.push({area: btSelectedArea.id, name: btSelectedArea.name, desc});
+  btUpdateDamageList();
+  btRenderSketch();
+  closeModal('btDamageModal');
+}
+
+function btRemoveDamage(i) {
+  btCurrentDamages.splice(i, 1);
+  btUpdateDamageList();
+  btRenderSketch();
+}
+
+function btUpdateDamageList() {
+  if (!btCurrentDamages.length) { document.getElementById('btDamageList').innerHTML = ''; return; }
+  document.getElementById('btDamageList').innerHTML =
+    '<div style="margin-top:12px"><div style="font-size:.78rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Registrerede skader</div>' +
+    btCurrentDamages.map((d,i) => `
+      <div class="damage-item-bt">
+        <div style="flex:1">
+          <div class="damage-title-bt">${d.name}</div>
+          <div class="damage-desc-bt">${d.desc}</div>
+        </div>
+        <button onclick="btRemoveDamage(${i})" style="background:var(--red);color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;flex-shrink:0">✕</button>
+      </div>`).join('') + '</div>';
+}
+
+function btHandlePhotos(e) {
+  Array.from(e.target.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => { btCurrentPhotos.push(ev.target.result); btRenderPhotos(); };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+}
+
+function btRenderPhotos() {
+  document.getElementById('btPhotoPreview').innerHTML =
+    btCurrentPhotos.map((src,i) => `
+      <div class="bt-photo-box">
+        <img src="${src}">
+        <button class="bt-photo-del" onclick="btRemovePhoto(${i})">✕</button>
+      </div>`).join('');
+}
+
+function btRemovePhoto(i) { btCurrentPhotos.splice(i,1); btRenderPhotos(); }
+
+function btSaveCheck() {
+  const vId = document.getElementById('btVehicle').value;
+  const dId = document.getElementById('btDriver').value;
+  if (!vId || !dId) { showToast('Vælg bil og chauffør','error'); return; }
+
+  const veh = getData('vehicles').find(v => v.id == vId);
+  const drv = getData('drivers').find(d => d.id == dId);
+
+  const obj = {
+    id:        btEditingId || ('BT' + Date.now()),
+    vehicleId: vId,
+    driverId:  dId,
+    vehicle:   veh ? veh.reg + ' — ' + (veh.brand||'') + ' ' + (veh.model||'') : '',
+    driver:    drv ? drv.name : '',
+    damages:   btCurrentDamages.slice(),
+    photos:    btCurrentPhotos.slice(),
+    condition: document.getElementById('btCondition').value.trim(),
+    date:      new Date().toISOString(),
+  };
+
+  const checks = getData('checks');
+  if (btEditingId) {
+    const idx = checks.findIndex(c => c.id === btEditingId);
+    if (idx >= 0) checks[idx] = obj; else checks.push(obj);
+  } else {
+    checks.push(obj);
+  }
+  setData('checks', checks);
+  closeModal('btCheckModal');
+  btLoadChecks();
+  renderDashboard();
+  showToast(btEditingId ? 'Biltjek opdateret' : 'Biltjek gemt', 'success');
+  btEditingId = null;
+}
+
+function btDeleteCheck(id) {
+  if (!confirm('Slet dette biltjek?')) return;
+  setData('checks', getData('checks').filter(c => c.id !== id));
+  btLoadChecks();
+  renderDashboard();
+  showToast('Biltjek slettet','success');
+}
+
+function btLoadChecks() {
+  const q = (document.getElementById('btSearch')||{}).value||'';
+  let list = getData('checks');
+  if (q) list = list.filter(c => JSON.stringify(c).toLowerCase().includes(q.toLowerCase()));
+  list = list.slice().reverse();
+  const tbody = document.getElementById('btChecksBody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div>Ingen biltjek registreret endnu</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => `<tr>
+    <td><b>${c.vehicle||'—'}</b></td>
+    <td>${c.driver||'—'}</td>
+    <td>${c.date ? new Date(c.date).toLocaleDateString('da-DK') : '—'}</td>
+    <td>${c.damages&&c.damages.length ? `<span class="badge badge-red">${c.damages.length} skader</span>` : '<span class="badge badge-green">Ingen</span>'}</td>
+    <td>${c.photos&&c.photos.length ? `<span class="badge badge-blue">${c.photos.length} 📷</span>` : '—'}</td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="btShowHistory('vehicle','${c.vehicleId}','${(c.vehicle||'').replace(/'/g,"\\'")}')">Historik</button>
+      <button class="btn btn-blue btn-sm" onclick="btEditCheck('${c.id}')">Rediger</button>
+      <button class="btn btn-red btn-sm" onclick="btDeleteCheck('${c.id}')">Slet</button>
+    </td>
+  </tr>`).join('');
+}
+
+function btShowHistory(type, id, label) {
+  let list = getData('checks');
+  if (type === 'vehicle') list = list.filter(c => String(c.vehicleId) === String(id));
+  else list = list.filter(c => String(c.driverId) === String(id));
+  list.sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  document.getElementById('btHistoryTitle').textContent = 'Historik: ' + label;
+  document.getElementById('btHistoryContent').innerHTML = !list.length
+    ? '<div class="empty"><div class="empty-icon">📋</div>Ingen historik</div>'
+    : list.map(h => `
+      <div class="history-item-bt">
+        <div style="font-weight:700;margin-bottom:4px">${h.date ? new Date(h.date).toLocaleString('da-DK',{dateStyle:'long',timeStyle:'short'}) : '—'}</div>
+        <div style="color:var(--text2);font-size:.85rem;margin-bottom:8px">${type==='vehicle'?'Chauffør:':'Bil:'} ${type==='vehicle'?h.driver:h.vehicle}</div>
+        ${h.damages&&h.damages.length
+          ? h.damages.map(d=>`<div class="damage-item-bt"><div><div class="damage-title-bt">${d.name}</div><div class="damage-desc-bt">${d.desc}</div></div></div>`).join('')
+          : '<span class="badge badge-green">Ingen skader</span>'}
+        ${h.condition ? `<div style="margin-top:8px;font-size:.85rem;color:var(--text2)"><b>Tilstand:</b> ${h.condition}</div>` : ''}
+        ${h.photos&&h.photos.length ? `<div style="margin-top:8px;font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:4px">BILLEDER (${h.photos.length})</div><div class="bt-photo-grid">${h.photos.map(s=>`<div class="bt-photo-box"><img src="${s}"></div>`).join('')}</div>` : ''}
+      </div>`).join('');
+  openModal('btHistoryModal');
+}
+
+function renderRapport() {
+  const checks = getData('checks');
+  const byArea = {}, byDriver = {};
+  let total = 0;
+  checks.forEach(c => {
+    (c.damages||[]).forEach(d => {
+      total++;
+      byArea[d.name] = (byArea[d.name]||0) + 1;
+      byDriver[c.driver] = (byDriver[c.driver]||0) + 1;
+    });
+  });
+
+  let html = `<div class="stat-grid">
+    <div class="stat-card"><div class="stat-num">${checks.length}</div><div class="stat-label">Biltjek</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${total}</div><div class="stat-label">Skader totalt</div></div>
+    <div class="stat-card"><div class="stat-num">${checks.filter(c=>c.damages&&c.damages.length).length}</div><div class="stat-label">Med skader</div></div>
+    <div class="stat-card"><div class="stat-num">${checks.filter(c=>!c.damages||!c.damages.length).length}</div><div class="stat-label">Ingen skader</div></div>
+  </div>`;
+
+  if (Object.keys(byArea).length) {
+    const sorted = Object.entries(byArea).sort((a,b)=>b[1]-a[1]);
+    html += `<div class="card"><div class="card-title">📍 Skader efter område</div>
+      ${sorted.map(([k,v])=>`<div class="rapport-row"><span>${k}</span><span class="badge badge-red">${v}</span></div>`).join('')}
+    </div>`;
+  }
+  if (Object.keys(byDriver).length) {
+    const sorted = Object.entries(byDriver).sort((a,b)=>b[1]-a[1]);
+    html += `<div class="card mt-16"><div class="card-title">👤 Skader efter chauffør</div>
+      ${sorted.map(([k,v])=>`<div class="rapport-row"><span>${k}</span><span class="badge badge-red">${v}</span></div>`).join('')}
+    </div>`;
+  }
+  if (!total) html += `<div class="empty"><div class="empty-icon">📊</div>Ingen skader registreret endnu</div>`;
+  document.getElementById('rapportContent').innerHTML = html;
+}
+
+
+
+const now = new Date();
+const tzOffset = now.getTimezoneOffset()*60000;
+const localNow = new Date(Date.now()-tzOffset).toISOString().slice(0,16);
+const pickup = document.getElementById('c_pickup');
+if(pickup) { pickup.min=localNow; pickup.value=localNow; }
+</script>
+</body>
+</html>
