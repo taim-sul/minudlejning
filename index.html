@@ -8,6 +8,96 @@
 <meta name="theme-color" content="#0a1628">
 <title>Din UdlejningsApp</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script type="module">
+// ════════════════════════════════════════════════
+//  FIREBASE — realtids database på tværs af enheder
+//  Konfigurer via Indstillinger → Firebase i appen
+// ════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const COLLECTIONS = ['contracts','vehicles','drivers','checks','users','settings'];
+let _db = null, _fbConnected = false;
+
+async function fbInit(){
+  // Hardkodet Firebase-konfiguration — virker på alle enheder uden opsætning
+  const HARDCODED = {
+    apiKey: "AIzaSyCSzKiHS1Mwlw6OfABUHYK1Dfi4YO_9aAM",
+    authDomain: "biltjek-af1c6.firebaseapp.com",
+    projectId: "biltjek-af1c6",
+    storageBucket: "biltjek-af1c6.firebasestorage.app",
+    messagingSenderId: "129179334692",
+    appId: "1:129179334692:web:509706136fc906a648c0b1"
+  };
+  localStorage.setItem('fb_config', JSON.stringify(HARDCODED));
+  const cfg = HARDCODED;
+  if(!cfg || !cfg.projectId) return;
+  try{
+    const app = initializeApp(cfg);
+    _db = getFirestore(app);
+    window._fbReady = true;
+    await fbSync();
+    // Realtids-listener: opdater alle enheder automatisk
+    for(const col of COLLECTIONS){
+      onSnapshot(doc(_db,'app','data_'+col), snap=>{
+        if(!snap.exists()) return;
+        const fresh = JSON.stringify(snap.data().value);
+        if(fresh !== localStorage.getItem(col)){
+          localStorage.setItem(col, fresh);
+          if(window.currentUser) fbRender(col);
+        }
+      });
+    }
+    fbStatus('✅ Forbundet til Firebase', 'var(--green)');
+    _fbConnected = true;
+  } catch(e){
+    fbStatus('❌ Firebase fejl: '+e.message, 'var(--red)');
+    console.error(e);
+  }
+}
+
+async function fbSync(){
+  fbStatus('🔄 Synkroniserer...','var(--accent)');
+  for(const col of COLLECTIONS){
+    try{
+      const snap = await getDoc(doc(_db,'app','data_'+col));
+      if(snap.exists()) localStorage.setItem(col, JSON.stringify(snap.data().value));
+    }catch(e){ console.warn('fbSync fejl for '+col, e); }
+  }
+  if(window.currentUser){
+    COLLECTIONS.forEach(c => fbRender(c));
+  }
+}
+
+function fbRender(col){
+  try{
+    if(col==='contracts') { window.renderContracts&&renderContracts(); window.renderDashboard&&renderDashboard(); }
+    if(col==='vehicles')  { window.renderVehicles&&renderVehicles(); window.renderDashboard&&renderDashboard(); }
+    if(col==='drivers')   { window.renderDrivers&&renderDrivers(); window.populateDriverSelect&&populateDriverSelect(); }
+    if(col==='checks')    { window.btLoadChecks&&btLoadChecks(); window.renderDashboard&&renderDashboard(); }
+    if(col==='settings')  window.loadSettings&&loadSettings();
+    if(col==='users')     window.renderUsers&&renderUsers();
+  }catch(e){}
+}
+
+function fbStatus(msg, color){
+  const el = document.getElementById('fbSyncStatus');
+  if(el){ el.textContent=msg; el.style.color=color||'var(--text2)'; }
+}
+
+// Global write-hook: kaldes fra setData()
+window._fbWrite = async function(k, v){
+  if(!_db || !_fbConnected) return;
+  try{ await setDoc(doc(_db,'app','data_'+k),{value:v}); }
+  catch(e){ console.warn('Firebase write fejl:',e); }
+};
+
+window._fbSync = fbSync;
+window._fbStatus = fbStatus;
+
+document.addEventListener('DOMContentLoaded', ()=> setTimeout(fbInit, 300));
+</script>
+
 <style>
 :root {
   --bg:#0a1628;--bg2:#0f1e38;--bg3:#162340;--card:#1a2a4a;--card2:#1f3158;
@@ -511,6 +601,29 @@ tr:hover td{background:var(--bg3);}
       </div>
       <button class="btn btn-accent mt-8" onclick="saveSettings()">Gem indstillinger</button>
     </div>
+    <div class="card mt-16" id="fbConfigCard">
+      <div class="card-title">☁️ Firebase — Delt database</div>
+      <div id="fbSyncStatus" style="font-size:.85rem;margin-bottom:12px;color:var(--text2)">☁️ Firebase ikke konfigureret — data gemmes kun lokalt</div>
+      <p style="color:var(--text2);font-size:.85rem;margin-bottom:14px">
+        Med Firebase deler alle enheder automatisk samme data i realtid.<br>
+        <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent)">Opret gratis projekt på console.firebase.google.com</a>
+        → Projektindstillinger → Tilføj webapp → Kopiér konfigurationen herunder.
+      </p>
+      <div class="grid2">
+        <div class="field"><label>API Key</label><input id="fb_apiKey" placeholder="AIzaSy..."></div>
+        <div class="field"><label>Project ID</label><input id="fb_projectId" placeholder="mit-projekt-12345"></div>
+        <div class="field"><label>Auth Domain</label><input id="fb_authDomain" placeholder="mit-projekt.firebaseapp.com"></div>
+        <div class="field"><label>Storage Bucket</label><input id="fb_storageBucket" placeholder="mit-projekt.appspot.com"></div>
+        <div class="field"><label>Messaging Sender ID</label><input id="fb_messagingSenderId" placeholder="123456789"></div>
+        <div class="field"><label>App ID</label><input id="fb_appId" placeholder="1:123:web:abc..."></div>
+      </div>
+      <div class="flex gap-8 mt-8" style="flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="saveFbConfig()">💾 Gem og forbind</button>
+        <button class="btn btn-blue btn-sm" onclick="fbSyncNow()">🔄 Synkroniser nu</button>
+        <button class="btn btn-ghost btn-sm" onclick="uploadLocalToFb()">⬆️ Upload lokal data til Firebase</button>
+        <button class="btn btn-red btn-sm" onclick="clearFbConfig()">🗑 Fjern Firebase</button>
+      </div>
+    </div>
     <div class="card mt-16">
       <div class="card-title">⬆️⬇️ Import / Eksport</div>
       <p style="color:var(--text2);font-size:.88rem;margin-bottom:12px;">Synkroniser data mellem enheder ved at eksportere og importere.</p>
@@ -842,7 +955,10 @@ const STORE = {
   set(k,v){ localStorage.setItem(k,JSON.stringify(v)); },
 };
 function getData(k,def=[]){ return STORE.get(k)||def; }
-function setData(k,v){ STORE.set(k,v); }
+function setData(k,v){
+  STORE.set(k,v);
+  if(window._fbWrite) window._fbWrite(k,v);
+}
 
 function initDefaults(){
   if(!STORE.get('users')) setData('users',[{id:'1',username:'admin',name:'Administrator',password:'pilot2024',role:'admin'}]);
@@ -909,6 +1025,7 @@ function showPage(id,el){
   if(id==='users') renderUsers();
   if(id==='biltjek') btLoadChecks();
   if(id==='rapport') renderRapport();
+  if(id==='settings') loadFbConfigUI();
 }
 
 // ════════════════════════════════════════════════
@@ -1656,6 +1773,53 @@ function deleteUser(id){
 // ════════════════════════════════════════════════
 //  SETTINGS
 // ════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════
+//  FIREBASE CONFIG UI
+// ════════════════════════════════════════════════
+function loadFbConfigUI(){
+  const cfg = JSON.parse(localStorage.getItem('fb_config')||'null');
+  if(!cfg) return;
+  ['apiKey','projectId','authDomain','storageBucket','messagingSenderId','appId'].forEach(k=>{
+    const el=document.getElementById('fb_'+k);
+    if(el) el.value=cfg[k]||'';
+  });
+}
+function saveFbConfig(){
+  const cfg={
+    apiKey: document.getElementById('fb_apiKey').value.trim(),
+    projectId: document.getElementById('fb_projectId').value.trim(),
+    authDomain: document.getElementById('fb_authDomain').value.trim(),
+    storageBucket: document.getElementById('fb_storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fb_messagingSenderId').value.trim(),
+    appId: document.getElementById('fb_appId').value.trim(),
+  };
+  if(!cfg.projectId||!cfg.apiKey){showToast('Udfyld mindst API Key og Project ID','error');return;}
+  localStorage.setItem('fb_config', JSON.stringify(cfg));
+  showToast('Firebase konfiguration gemt — genindlæser...','success');
+  setTimeout(()=>location.reload(), 1200);
+}
+function clearFbConfig(){
+  if(!confirm('Fjern Firebase-forbindelsen? Data slettes ikke.')) return;
+  localStorage.removeItem('fb_config');
+  showToast('Firebase fjernet — genindlæser...','success');
+  setTimeout(()=>location.reload(), 1200);
+}
+function fbSyncNow(){
+  if(!window._fbSync){showToast('Firebase er ikke forbundet','error');return;}
+  window._fbSync().then(()=>showToast('Synkroniseret!','success')).catch(()=>showToast('Sync fejlede','error'));
+}
+async function uploadLocalToFb(){
+  if(!window._fbWrite){showToast('Firebase er ikke forbundet','error');return;}
+  if(!confirm('Upload al lokal data til Firebase? Dette overskriver data på Firebase.')) return;
+  const keys=['contracts','vehicles','drivers','checks','users','settings'];
+  for(const k of keys){
+    const v=getData(k, k==='settings'?{}:[]);
+    await window._fbWrite(k,v);
+  }
+  showToast('Al lokal data uploadet til Firebase ✅','success');
+}
+
 function loadSettings(){
   const s=getData('settings',{});
   document.getElementById('s_name').value=s.name||'';document.getElementById('s_cvr').value=s.cvr||'';
