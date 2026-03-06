@@ -363,6 +363,8 @@ tr:hover td{background:var(--bg3);}
   .bt-pr-photos{display:flex;flex-wrap:wrap;gap:8px;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -583,6 +585,7 @@ tr:hover td{background:var(--bg3);}
       <div class="flex gap-8 mt-16" style="flex-wrap:wrap">
         <button class="btn btn-blue" onclick="printContract()">🖨️ Print</button>
         <button class="btn btn-green" onclick="emailContract()">📧 Send på mail</button>
+        <button class="btn" style="background:#25D366;color:#fff" onclick="whatsappContract()">💬 Send via WhatsApp</button>
         <button class="btn btn-ghost" onclick="exportContract()">⬇️ Eksporter JSON</button>
         <button class="btn btn-accent" onclick="resetWizard()">+ Ny Kontrakt</button>
       </div>
@@ -823,6 +826,7 @@ tr:hover td{background:var(--bg3);}
     <div class="modal-actions flex" style="flex-wrap:wrap;gap:8px">
       <button class="btn btn-blue btn-sm" onclick="printContractById()">🖨️ Print</button>
       <button class="btn btn-green btn-sm" onclick="emailContractById()">📧 Send mail</button>
+      <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="whatsappContractById()">💬 WhatsApp</button>
       <button class="btn btn-red btn-sm" id="returnBtn" onclick="returnVehicle()">✅ Afslut/Aflever</button>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('contractDetailModal')">Luk</button>
     </div>
@@ -1356,14 +1360,21 @@ function validateDates(){
 function initSignaturePads(){
   ['sigLessor','sigLessee'].forEach(id=>{
     const c=document.getElementById(id),ctx=c.getContext('2d');
+    function resizeCanvas(){
+      const r=c.getBoundingClientRect();
+      if(r.width>0){c.width=r.width;c.height=r.height||120;}
+      ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+    }
+    resizeCanvas();
     sigCtx[id]=ctx;drawing[id]=false;
-    ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.lineCap='round';
-    c.addEventListener('mousedown',e=>{drawing[id]=true;ctx.beginPath();const r=c.getBoundingClientRect();ctx.moveTo(e.clientX-r.left,e.clientY-r.top);});
-    c.addEventListener('mousemove',e=>{if(!drawing[id])return;const r=c.getBoundingClientRect();ctx.lineTo(e.clientX-r.left,e.clientY-r.top);ctx.stroke();});
+    function getPos(e){const r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+    function getTouchPos(e){const r=c.getBoundingClientRect(),t=e.touches[0];return{x:t.clientX-r.left,y:t.clientY-r.top};}
+    c.addEventListener('mousedown',e=>{resizeCanvas();drawing[id]=true;ctx.beginPath();const p=getPos(e);ctx.moveTo(p.x,p.y);});
+    c.addEventListener('mousemove',e=>{if(!drawing[id])return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
     c.addEventListener('mouseup',()=>drawing[id]=false);
     c.addEventListener('mouseleave',()=>drawing[id]=false);
-    c.addEventListener('touchstart',e=>{e.preventDefault();drawing[id]=true;ctx.beginPath();const r=c.getBoundingClientRect(),t=e.touches[0];ctx.moveTo(t.clientX-r.left,t.clientY-r.top);},{passive:false});
-    c.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing[id])return;const r=c.getBoundingClientRect(),t=e.touches[0];ctx.lineTo(t.clientX-r.left,t.clientY-r.top);ctx.stroke();},{passive:false});
+    c.addEventListener('touchstart',e=>{e.preventDefault();resizeCanvas();drawing[id]=true;ctx.beginPath();const p=getTouchPos(e);ctx.moveTo(p.x,p.y);},{passive:false});
+    c.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing[id])return;const p=getTouchPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();},{passive:false});
     c.addEventListener('touchend',()=>drawing[id]=false);
   });
 }
@@ -1375,7 +1386,19 @@ function clearSig(id){const c=document.getElementById(id);c.getContext('2d').cle
 function handlePhotos(e){
   Array.from(e.target.files).forEach(f=>{
     const r=new FileReader();
-    r.onload=ev=>{contractPhotos.push(ev.target.result);renderPhotoGrid();};
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=1200;
+        let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+        const cvs=document.createElement('canvas');cvs.width=w;cvs.height=h;
+        cvs.getContext('2d').drawImage(img,0,0,w,h);
+        const compressed=cvs.toDataURL('image/jpeg',0.70);
+        contractPhotos.push(compressed);renderPhotoGrid();
+      };
+      img.src=ev.target.result;
+    };
     r.readAsDataURL(f);
   });
   e.target.value='';
@@ -1446,8 +1469,14 @@ function finalizeContract(){
     createdBy:currentUser?currentUser.username:'admin',
   };
   const updated=vehicles.map(v=>v.id===vid?{...v,status:'rented',currentContract:id}:v);
-  setData('vehicles',updated);
-  const contracts=getData('contracts');contracts.push(contract);setData('contracts',contracts);
+  try{
+    setData('vehicles',updated);
+    const contracts=getData('contracts');contracts.push(contract);setData('contracts',contracts);
+  }catch(err){
+    showToast('Fejl ved gemning: '+err.message,'error');
+    console.error('finalizeContract setData error:',err);
+    return;
+  }
   currentContractData=contract;
   document.getElementById('contractPreview').innerHTML=buildContractHTML(contract);
   goStep(7);
@@ -1545,11 +1574,12 @@ function fmtD(s){if(!s)return'—';const d=new Date(s);if(isNaN(d))return s;retu
 // ════════════════════════════════════════════════
 function printContract(){
   const html=document.getElementById('printArea')?document.getElementById('printArea').outerHTML:buildContractHTML(currentContractData);
-  const w=window.open('','_blank');
-  if(!w){showToast('Tillad popups for at printe','error');return;}
-  w.document.open();
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}table td,table th{border:1px solid #ccc;padding:6px;font-size:12px}h2{text-align:center}.sig-block{display:flex;gap:24px;margin-top:24px}.sig-line{flex:1;border-top:1px solid #333;padding-top:6px}</style></head><body>${html}<script>window.onload=function(){window.print()}<\/script></body></html>`);
-  w.document.close();
+  const fullHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}table td,table th{border:1px solid #ccc;padding:6px;font-size:12px}h2{text-align:center}.sig-block{display:flex;gap:24px;margin-top:24px}.sig-line{flex:1;border-top:1px solid #333;padding-top:6px}</style></head><body>'+html+'<scr'+'ipt>window.onload=function(){window.print()}<'+'/scr'+'ipt></body></html>';
+  const blob=new Blob([fullHtml],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 function printContractById(){
   const c=getData('contracts').find(x=>x.id===currentContractId);
@@ -1559,32 +1589,78 @@ function printContractById(){
 function emailContract(){
   const c=currentContractData;
   if(!c||!c.driver)return;
-  // Build printable HTML and open in new window with print dialog for PDF saving
   const html=buildContractHTML(c);
-  const printWin=window.open('','_blank');
-  if(!printWin){showToast('Tillad popups for at sende kontrakt','error');return;}
-  printWin.document.open();
-  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}
-    table td,table th{border:1px solid #ccc;padding:6px;font-size:11px}h2{text-align:center}
-    .sig-block{display:flex;gap:24px;margin-top:24px}.sig-line{flex:1;border-top:1px solid #333;padding-top:6px}
-    .contract-paper{padding:20px}
-    </style>
-    <script>
-      window.onload = function() {
-        window.print();
-        setTimeout(function() {
-          window.location.href = 'mailto:${encodeURIComponent(c.driver.email)}?subject=${encodeURIComponent('Udlejningskontrakt '+c.num)}&body=${encodeURIComponent('Kære '+c.driver.name+',\n\nVedhæft venligst den PDF du lige har gemt/printet.\n\nKontraktnummer: '+c.num+'\nBil: '+c.vehicle.brand+' '+c.vehicle.model+' ('+c.vehicle.reg+')\nPeriode: '+fmtDT(c.rental.pickup)+' - '+fmtDT(c.rental.return)+'\n\nMed venlig hilsen\n'+c.lessor.name)}';
-        }, 2000);
-      };
-    <\/script>
-    </head><body>${html}</body></html>`);
-  printWin.document.close();
-  showToast('Kontrakt åbnet til print/PDF — gem som PDF og vedhæft i mail','success');
+  const style='body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%}table td,table th{border:1px solid #ccc;padding:6px;font-size:11px}h2{text-align:center}.sig-block{display:flex;gap:24px;margin-top:24px}.sig-line{flex:1;border-top:1px solid #333;padding-top:6px}.contract-paper{padding:20px}';
+  const fullHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+style+'</style></head><body>'+html+'</body></html>';
+  const blob=new Blob([fullHtml],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  const mailBody=encodeURIComponent('Kære '+c.driver.name+',\n\nVedhæft venligst kontrakten.\n\nKontraktnummer: '+c.num+'\nBil: '+c.vehicle.brand+' '+c.vehicle.model+' ('+c.vehicle.reg+')\nPeriode: '+fmtDT(c.rental.pickup)+' - '+fmtDT(c.rental.return)+'\n\nMed venlig hilsen\n'+c.lessor.name);
+  const mailSubject=encodeURIComponent('Udlejningskontrakt '+c.num);
+  setTimeout(()=>{window.location.href='mailto:'+encodeURIComponent(c.driver.email)+'?subject='+mailSubject+'&body='+mailBody;},500);
+  showToast('Kontrakt åbnet — gem som PDF og vedhæft i mail','success');
 }
 function emailContractById(){
   const c=getData('contracts').find(x=>x.id===currentContractId);
   if(c){currentContractData=c;emailContract();}
+}
+
+async function whatsappContract(){
+  const c=currentContractData;
+  if(!c||!c.driver){showToast('Ingen kontrakt at sende','error');return;}
+  showToast('Genererer PDF...','success');
+  try{
+    const {jsPDF}=window.jspdf;
+    const contractEl=document.getElementById('printArea')||createTempContractEl(c);
+    const canvas=await html2canvas(contractEl,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const imgData=canvas.toDataURL('image/jpeg',0.92);
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pdfW=pdf.internal.pageSize.getWidth();
+    const pdfH=(canvas.height*pdfW)/canvas.width;
+    const pageH=pdf.internal.pageSize.getHeight();
+    let yPos=0;
+    while(yPos<pdfH){
+      if(yPos>0)pdf.addPage();
+      pdf.addImage(imgData,'JPEG',0,-yPos,pdfW,pdfH);
+      yPos+=pageH;
+    }
+    const pdfBlob=pdf.output('blob');
+    const pdfFile=new File([pdfBlob],'Kontrakt-'+c.num+'.pdf',{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[pdfFile]})){
+      await navigator.share({
+        files:[pdfFile],
+        title:'Udlejningskontrakt '+c.num,
+        text:'Kære '+c.driver.name+', vedhæftet er din udlejningskontrakt '+c.num+'.'
+      });
+    } else {
+      const url=URL.createObjectURL(pdfFile);
+      const a=document.createElement('a');a.href=url;a.download='Kontrakt-'+c.num+'.pdf';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),10000);
+      const phone=(c.driver.phone||'').replace(/[^0-9]/g,'');
+      const msg=encodeURIComponent('Hej '+c.driver.name+', jeg har netop downloadet din udlejningskontrakt '+c.num+'. Vedhæft venligst filen i denne chat.');
+      const waUrl=phone?'https://wa.me/45'+phone+'?text='+msg:'https://wa.me/?text='+msg;
+      setTimeout(()=>window.open(waUrl,'_blank'),800);
+      showToast('PDF downloadet — send den manuelt via WhatsApp','success');
+    }
+  }catch(err){
+    console.error('WhatsApp PDF error:',err);
+    showToast('Fejl ved PDF-generering: '+err.message,'error');
+  }
+}
+function createTempContractEl(c){
+  const div=document.createElement('div');
+  div.innerHTML=buildContractHTML(c);
+  div.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;padding:20px;font-family:Arial,sans-serif';
+  document.body.appendChild(div);
+  setTimeout(()=>document.body.removeChild(div),5000);
+  return div;
+}
+function whatsappContractById(){
+  const c=getData('contracts').find(x=>x.id===currentContractId);
+  if(c){currentContractData=c;whatsappContract();}
 }
 function exportContract(){dlJSON(currentContractData,'kontrakt-'+currentContractData.num+'.json');}
 
