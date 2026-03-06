@@ -675,7 +675,7 @@ tr:hover td{background:var(--bg3);}
     <div class="page-title">Skaderapport</div>
     <div class="page-sub">Oversigt over registrerede skader</div>
     <div class="flex gap-8" style="margin-bottom:16px">
-      <button class="btn btn-blue btn-sm" onclick="window.print()">🖨 Print rapport</button>
+      <button class="btn btn-blue btn-sm" onclick="printSkaderapport()">🖨 Print rapport</button>
     </div>
     <div id="rapportContent"></div>
   </div>
@@ -1088,7 +1088,7 @@ function activateApp(user){
   document.getElementById('app').style.display='block';
   document.getElementById('currentUserLabel').textContent=user.name||user.username;
   if(user.role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
-  loadSettings(); renderDashboard(); renderVehicles(); renderContracts();
+  loadSettings(); renderDashboard(); renderVehicles(); renderContracts(); setTimeout(btMigrateOldPhotos, 3000);
   renderDrivers(); populateDriverSelect(); populateVehicleSelect(); btLoadChecks();
 }
 function doLogin(){
@@ -2202,7 +2202,19 @@ function setCheck(key,val,btn){
 function btHandlePhotos(e){
   Array.from(e.target.files).forEach(f=>{
     const r=new FileReader();
-    r.onload=ev=>{btCurrentPhotos.push(ev.target.result);btRenderPhotos();};
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=1200;
+        let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+        const cvs=document.createElement('canvas');cvs.width=w;cvs.height=h;
+        cvs.getContext('2d').drawImage(img,0,0,w,h);
+        btCurrentPhotos.push(cvs.toDataURL('image/jpeg',0.70));
+        btRenderPhotos();
+      };
+      img.src=ev.target.result;
+    };
     r.readAsDataURL(f);
   });
   e.target.value='';
@@ -2360,6 +2372,31 @@ function btDeleteCheck(id){
   btLoadChecks();renderDashboard();showToast('Biltjek slettet','success');
 }
 
+function btMigrateOldPhotos(){
+  const checks=getData('checks');
+  let pending=0,changed=false;
+  const MAX=1200,Q=0.70;
+  checks.forEach((c,ci)=>{
+    if(!c.photos||!c.photos.length)return;
+    c.photos.forEach((src,pi)=>{
+      if(src&&src.length>600000){
+        pending++;
+        const img=new Image();
+        img.onload=()=>{
+          let w=img.width,h=img.height;
+          if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+          const cvs=document.createElement('canvas');cvs.width=w;cvs.height=h;
+          cvs.getContext('2d').drawImage(img,0,0,w,h);
+          checks[ci].photos[pi]=cvs.toDataURL('image/jpeg',Q);
+          changed=true;pending--;
+          if(pending===0&&changed){try{setData('checks',checks);}catch(e){}}
+        };
+        img.src=src;
+      }
+    });
+  });
+}
+
 function btLoadChecks(){
   const q=(document.getElementById('btSearch')||{}).value||'';
   let list=getData('checks');
@@ -2422,7 +2459,7 @@ function btShowHistory(type,id,label){
           ${h.mekanisk?`<div style="margin-top:6px;font-size:.85rem;color:var(--red)"><b>⚙️ Mekaniske problemer:</b> ${h.mekanisk}</div>`:''}
           ${(h.kmStand||h.kmService)?`<div style="margin-top:6px;font-size:.85rem;color:var(--text2)"><b>🔢 KM stand:</b> ${h.kmStand||'—'} &nbsp;|&nbsp; <b>🔧 KM til service:</b> ${h.kmService||'—'}${parseInt(h.kmService)<1000&&h.kmService?' <span style="color:#f59e0b;font-weight:700">⚠️ Service snart!</span>':''}</div>`:''}
           ${h.farligtgodsUdloeb?`<div style="margin-top:6px;font-size:.85rem;color:var(--text2)"><b>☢️ Farligtgods bevis udløber:</b> ${new Date(h.farligtgodsUdloeb).toLocaleDateString('da-DK')}</div>`:''}
-          ${h.photos&&h.photos.length?`<div style="margin-top:8px"><div class="bt-photo-grid">${h.photos.map(s=>`<div class="bt-photo-box"><img src="${s}"></div>`).join('')}</div></div>`:''}
+          ${h.photos&&h.photos.length?`<div style="margin-top:6px"><span class="badge badge-blue">📷 ${h.photos.length} billede${h.photos.length!==1?'r':''}</span></div>`:''}
         </div>`;
     }).join('');
   openModal('btHistoryModal');
@@ -2454,7 +2491,9 @@ function btNewCheckFromHistory(){
 }
 
 // Fuld rapport for ét biltjek
+let currentBtRapportId=null;
 function btShowFullRapport(id){
+  currentBtRapportId=id;
   const c=getData('checks').find(x=>x.id===id);
   if(!c){showToast('Biltjek ikke fundet','error');return;}
   const rapTitle=document.getElementById('btRapportTitle');
@@ -2542,11 +2581,12 @@ function btShowFullRapport(id){
     </div>`;
   }
 
-  // Billeder
+  // Billeder — vises IKKE inline (crasher mobil med gamle store fotos)
   if(c.photos&&c.photos.length){
-    html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">
+    html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px" id="btPhotoSection">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--text2);margin-bottom:8px">📷 BILLEDER (${c.photos.length})</div>
-      <div class="bt-photo-grid">${c.photos.map(s=>`<div class="bt-photo-box"><img src="${s}"></div>`).join('')}</div>
+      <button class="btn btn-blue btn-sm" onclick="btLoadPhotos('${c.id}')">Vis ${c.photos.length} billede${c.photos.length!==1?'r':''}</button>
+      <div id="btPhotoGrid" style="margin-top:10px"></div>
     </div>`;
   }
 
@@ -2565,56 +2605,78 @@ function btShowFullRapport(id){
   openModal('btRapportModal');
 }
 
+function btLoadPhotos(checkId){
+  const c=getData('checks').find(x=>x.id===checkId);
+  if(!c||!c.photos||!c.photos.length)return;
+  const grid=document.getElementById('btPhotoGrid');
+  const btn=grid?grid.previousElementSibling:null;
+  if(btn)btn.style.display='none';
+  if(!grid)return;
+  let i=0;
+  function addNext(){
+    if(i>=c.photos.length)return;
+    const div=document.createElement('div');
+    div.className='bt-photo-box';
+    const img=document.createElement('img');
+    img.src=c.photos[i];
+    img.style.cssText='width:100%;border-radius:4px;display:block';
+    div.appendChild(img);
+    grid.appendChild(div);
+    i++;
+    requestAnimationFrame(addNext);
+  }
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px';
+  requestAnimationFrame(addNext);
+}
+
 function btPrintRapport(){
-  const content=document.getElementById('btRapportContent');
-  const title=document.getElementById('btRapportTitle').textContent;
-  if(!content){showToast('Intet indhold at printe','error');return;}
-
-  // Find the check data from the current rapport
-  const checkLabels={'brandslukker':'Brandslukker','spildkit':'Spildkit','evotec_left':'Evotec venstre','evotec_right':'Evotec højre','motor_olie':'Motor olie','adblue':'AdBlue','uniform':'Uniform & sikkerhedssko','vest':'Vest','koerekort':'Kørekort','idkort':'ID-kort','vubkort':'VUB-kort','farligtgods':'Farligtgods bevis'};
-
-  // Get current rapport ID from title — or just use the rendered content directly
-  // Build print-friendly HTML without CSS variables
-  const printArea=document.getElementById('btPrintArea');
-  
-  // Convert the modal content to print-safe HTML by replacing var() colors with real values
-  let html=content.innerHTML
-    .replace(/color:var\(--green\)/g,'color:#065f46')
-    .replace(/color:var\(--red\)/g,'color:#b91c1c')
-    .replace(/color:var\(--accent\)/g,'color:#e8a020')
-    .replace(/color:var\(--text\)/g,'color:#111')
-    .replace(/color:var\(--text2\)/g,'color:#555')
-    .replace(/color:var\(--text3\)/g,'color:#999')
-    .replace(/background:var\(--bg3\)/g,'background:#f5f5f5')
-    .replace(/background:rgba\(16,185,129,\.08\)/g,'background:#f0faf6')
-    .replace(/background:rgba\(239,68,68,\.08\)/g,'background:#fff5f5')
-    .replace(/background:rgba\(239,68,68,\.1\)/g,'background:#fff0f0')
-    .replace(/background:rgba\(16,185,129,\.1\)/g,'background:#f0fff6')
-    .replace(/border:1px solid var\(--border\)/g,'border:1px solid #ddd')
-    .replace(/border:1px solid rgba\(239,68,68,\.3\)/g,'border:1px solid #fca5a5')
-    .replace(/border:1px solid rgba\(16,185,129,\.3\)/g,'border:1px solid #6ee7b7')
-    .replace(/border:2px solid var\(--red\)/g,'border:2px solid #b91c1c')
-    .replace(/border:2px solid var\(--green\)/g,'border:2px solid #065f46')
-    .replace(/var\(--red\)/g,'#b91c1c')
-    .replace(/var\(--green\)/g,'#065f46')
-    .replace(/var\(--accent\)/g,'#e8a020')
-    .replace(/var\(--text\b\)/g,'#111')
-    .replace(/var\(--text2\)/g,'#555')
-    .replace(/var\(--bg3\)/g,'#f5f5f5');
-
-  printArea.innerHTML=`<h1 style="font-size:1.3rem;margin-bottom:16px;border-bottom:2px solid #333;padding-bottom:8px;">${title}</h1>${html}`;
-  
-  // Small delay to ensure DOM update, then print
-  setTimeout(()=>{
-    window.print();
-    // Clean up after print dialog
-    setTimeout(()=>{ printArea.innerHTML=''; }, 1000);
-  }, 100);
+  const c=getData('checks').find(x=>x.id===currentBtRapportId);
+  if(!c){showToast('Rapport data ikke fundet','error');return;}
+  const title='Biltjek Rapport — '+(c.vehicle||'')+' · '+(c.driver||'');
+  const lbl={'brandslukker':'Brandslukker','spildkit':'Spildkit','evotec_left':'Evotec venstre','evotec_right':'Evotec højre','motor_olie':'Motor olie','adblue':'AdBlue','uniform':'Uniform & sikkerhedssko','vest':'Vest','koerekort':'Kørekort','idkort':'ID-kort','vubkort':'VUB-kort','farligtgods':'Farligtgods bevis'};
+  const allC=Object.entries(c.checks||{});
+  const okC=allC.filter(([,v])=>v==='ok');
+  const nejC=allC.filter(([,v])=>v==='nej');
+  const hasIssues=nejC.length>0||(c.damages&&c.damages.length>0)||c.mekanisk;
+  let b='<p><b>Dato:</b> '+(c.date?new Date(c.date).toLocaleString('da-DK',{dateStyle:'long',timeStyle:'short'}):'—')+'</p>';
+  b+='<p><b>Bil:</b> '+(c.vehicle||'—')+'&nbsp;&nbsp;<b>Chauffør:</b> '+(c.driver||'—')+'&nbsp;&nbsp;<b>Type:</b> '+(c.biltype==='kassevogn'?'Kassevogn':'Sprinter')+'</p>';
+  if(c.kmStand)b+='<p><b>KM stand:</b> '+c.kmStand+'</p>';
+  if(c.kmService)b+='<p><b>KM til service:</b> '+c.kmService+(parseInt(c.kmService)<1000?' ⚠️ Service snart!':'')+'</p>';
+  if(nejC.length){b+='<h3 style="color:#b91c1c">⛔ Fejl og mangler ('+nejC.length+')</h3><ul>';nejC.forEach(([k])=>{b+='<li style="color:#b91c1c">'+(lbl[k]||k)+'</li>';});b+='</ul>';}
+  else{b+='<p style="color:#065f46">✅ Ingen udstyrsfejl</p>';}
+  if(c.damages&&c.damages.length){b+='<h3 style="color:#b91c1c">📍 Skader ('+c.damages.length+')</h3><ul>';c.damages.forEach((d,i)=>{b+='<li>Skade '+(i+1)+': '+d.desc+'</li>';});b+='</ul>';}
+  else{b+='<p style="color:#065f46">✅ Ingen skader</p>';}
+  if(c.mekanisk)b+='<h3 style="color:#b91c1c">⚙️ Mekaniske problemer</h3><p>'+c.mekanisk+'</p>';
+  if(okC.length)b+='<h3 style="color:#065f46">✅ OK punkter</h3><p>'+okC.map(([k])=>lbl[k]||k).join(', ')+'</p>';
+  if(c.condition)b+='<h3>Generel tilstand</h3><p>'+c.condition+'</p>';
+  if(c.photos&&c.photos.length){b+='<p><b>📷 Billeder:</b> '+c.photos.length+' billede'+(c.photos.length!==1?'r':'')+'</p>';}
+  b+='<div style="margin-top:20px;padding:12px;border:2px solid '+(hasIssues?'#b91c1c':'#065f46')+';border-radius:8px;text-align:center;font-weight:700;font-size:1.1rem;color:'+(hasIssues?'#b91c1c':'#065f46')+'">'+(hasIssues?'⚠️ HANDLING PÅKRÆVET':'✅ ALT OK — INGEN PROBLEMER')+'</div>';
+  const printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:24px;color:#111}h1{border-bottom:2px solid #333;padding-bottom:8px}h3{margin-top:16px}ul{margin:4px 0}img{max-width:100%}</style></head><body><h1>'+title+'</h1>'+b+'</body></html>';
+  const blob=new Blob([printHtml],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 
 // ════════════════════════════════════════════════
 //  RAPPORT
 // ════════════════════════════════════════════════
+function printSkaderapport(){
+  const el=document.getElementById('rapportContent');
+  if(!el||!el.innerHTML){showToast('Ingen data at printe','error');return;}
+  const html=el.innerHTML
+    .replace(/var\(--red\)/g,'#b91c1c').replace(/var\(--green\)/g,'#065f46')
+    .replace(/var\(--accent\)/g,'#e8a020').replace(/var\(--text2\)/g,'#555')
+    .replace(/var\(--border\)/g,'#ddd').replace(/var\(--bg3\)/g,'#f5f5f5');
+  const sett=getData('settings',{});
+  const printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;margin:20px;background:#fff;color:#111}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.stat-card{background:#f5f5f5;border-radius:8px;padding:16px;text-align:center}.stat-num{font-size:2rem;font-weight:900}.stat-label{font-size:.8rem;color:#555;margin-top:4px}.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;margin-bottom:12px}.card-title{font-weight:700;font-size:1rem;margin-bottom:12px}.rapport-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ddd}.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:700}.badge-red{background:#fee2e2;color:#b91c1c}.badge-yellow{background:#fef9c3;color:#92400e}</style></head><body><h1 style="border-bottom:2px solid #333;padding-bottom:8px">Skaderapport — '+(sett.name||'Udlejningsapp')+'</h1>'+html+'</body></html>';
+  const blob=new Blob([printHtml],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
 function renderRapport(){
   const checks=getData('checks');
   const byDriver={};let totalDmg=0,totalIssues=0;
