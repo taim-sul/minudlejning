@@ -694,17 +694,7 @@ tr:hover td{background:var(--bg3);}
         <div class="field"><label>Telefon</label><input id="s_phone"></div>
         <div class="field"><label>E-mail</label><input id="s_email"></div>
         <div class="field"><label>Administrationsgebyr bøder (DKK)</label><input id="s_gebyr" type="number" placeholder="500"></div>
-        <div class="field" style="grid-column:1/-1">
-          <label>🔌 Nummerplade opslag — Cloudflare Worker URL</label>
-          <div style="display:flex;gap:8px">
-            <input id="s_motorapi" type="text" placeholder="https://din-worker.din-bruger.workers.dev" style="flex:1">
-            <button class="btn btn-blue btn-sm" onclick="saveMotorApiKey()">Gem</button>
-          </div>
-          <div style="font-size:.78rem;color:var(--text2);margin-top:4px">
-            Opsæt én gang: 1) Opret gratis konto på <a href="https://workers.cloudflare.com" target="_blank" style="color:var(--accent)">workers.cloudflare.com</a>
-            2) Opret ny Worker 3) Indsæt koden fra vejledningen 4) Tilføj MOTOR_API_KEY miljøvariabel 5) Indsæt Worker-URL her
-          </div>
-        </div>
+
       </div>
       <button class="btn btn-accent mt-8" onclick="saveSettings()">Gem indstillinger</button>
     </div>
@@ -765,17 +755,7 @@ tr:hover td{background:var(--bg3);}
   <div class="modal">
     <h3 id="vModalTitle">Tilføj Bil</h3>
     <input type="hidden" id="v_editId">
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
-      <div style="font-weight:700;font-size:.9rem;margin-bottom:8px">🔍 Auto-udfyld fra nummerplade</div>
-      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
-        <div class="field" style="margin:0;flex:1;min-width:120px">
-          <label style="font-size:.8rem">Nummerplade</label>
-          <input id="vm_lookup_reg" placeholder="AB12345" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupVehicle();}">
-        </div>
-        <button class="btn btn-blue btn-sm" onclick="lookupVehicle()" style="margin-bottom:1px">🔍 Hent biloplysninger</button>
-      </div>
-      <div id="vm_lookup_status" style="font-size:.82rem;margin-top:6px;color:var(--text2)"></div>
-    </div>
+
     <div class="grid2">
       <div class="field"><label>Mærke *</label><input id="vm_brand" placeholder="F.eks. Mercedes"></div>
       <div class="field"><label>Model *</label><input id="vm_model" placeholder="F.eks. Sprinter"></div>
@@ -1802,59 +1782,7 @@ function openVehicleModal(id){
   }
   openModal('vehicleModal');
 }
-function lookupVehicle(){
-  const raw=(document.getElementById('vm_lookup_reg').value||'').replace(/\s/g,'').toUpperCase();
-  if(!raw){showToast('Indtast nummerplade først','error');return;}
-  const proxyBase=(localStorage.getItem('motorapi_proxy')||'').trim();
-  if(!proxyBase){
-    const url=prompt('Indtast din Cloudflare Worker URL (se vejledning i Indstillinger):','https://din-worker.din-bruger.workers.dev');
-    if(!url||!url.startsWith('http')){return;}
-    localStorage.setItem('motorapi_proxy',url.trim().replace(/\/$/,''));
-  }
-  const proxy=(localStorage.getItem('motorapi_proxy')||'').trim().replace(/\/$/,'');
-  const statusEl=document.getElementById('vm_lookup_status');
-  statusEl.textContent='⏳ Henter biloplysninger...';
-  statusEl.style.color='var(--accent)';
-  fetch(proxy+'/'+encodeURIComponent(raw))
-  .then(r=>{
-    if(r.status===401){throw new Error('Ugyldig API-nøgle — gå til motorapi.dk og tjek din nøgle');}
-    if(r.status===404){throw new Error('Nummerplade ikke fundet i motorregistret');}
-    if(!r.ok){throw new Error('API fejl: '+r.status);}
-    return r.json();
-  })
-  .then(d=>{
-    document.getElementById('vm_reg').value=raw;
-    document.getElementById('vm_lookup_reg').value=raw;
-    if(d.make) document.getElementById('vm_brand').value=capitalize(d.make);
-    if(d.model) document.getElementById('vm_model').value=capitalize(d.model);
-    if(d.model_year) document.getElementById('vm_year').value=d.model_year;
-    if(d.color) document.getElementById('vm_color').value=capitalize(d.color);
-    if(d.vin) document.getElementById('vm_vin').value=d.vin;
-    if(d.total_weight&&d.own_weight) document.getElementById('vm_payload').value=Math.max(0,d.total_weight-d.own_weight);
-    if(d.fuel_type){
-      const ft=d.fuel_type.toLowerCase();
-      const sel=document.getElementById('vm_fuel');
-      if(ft.includes('diesel'))sel.value='Diesel';
-      else if(ft.includes('benzin')||ft.includes('petrol'))sel.value='Benzin';
-      else if(ft.includes('el')||ft.includes('electric'))sel.value='El';
-      else if(ft.includes('hybrid'))sel.value='Hybrid';
-    }
-    const info=[d.make,d.model,d.model_year,d.color].filter(Boolean).map(capitalize).join(' · ');
-    statusEl.textContent='✅ '+info;
-    statusEl.style.color='var(--green)';
-    showToast('Biloplysninger hentet!','success');
-  })
-  .catch(e=>{
-    statusEl.textContent='❌ '+e.message;
-    statusEl.style.color='var(--red)';
-    if(e.message.includes('nøgle')) localStorage.removeItem('motorapi_key');
-  });
-}
 
-function capitalize(s){
-  if(!s)return s;
-  return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();
-}
 
 function saveVehicle(){
   const id=document.getElementById('v_editId').value;
@@ -2077,18 +2005,10 @@ async function uploadLocalToFb(){
   showToast('Al lokal data uploadet til Firebase ✅','success');
 }
 
-function saveMotorApiKey(){
-  const val=(document.getElementById('s_motorapi')||{}).value||'';
-  if(val.trim()){localStorage.setItem('motorapi_proxy',val.trim().replace(/\/$/,''));showToast('Worker URL gemt','success');}
-  else{localStorage.removeItem('motorapi_proxy');showToast('Worker URL slettet','success');}
-}
 
 function loadSettings(){
   const s=getData('settings',{});
-  document.getElementById('s_name').value=s.name||'';
-  const savedProxy=localStorage.getItem('motorapi_proxy')||'';
-  const motorApiEl=document.getElementById('s_motorapi');
-  if(motorApiEl)motorApiEl.value=savedProxy;document.getElementById('s_cvr').value=s.cvr||'';
+  document.getElementById('s_name').value=s.name||'';document.getElementById('s_cvr').value=s.cvr||'';
   document.getElementById('s_addr').value=s.addr||'';document.getElementById('s_city').value=s.city||'';
   document.getElementById('s_phone').value=s.phone||'';document.getElementById('s_email').value=s.email||'';
   const gebEl=document.getElementById('s_gebyr');if(gebEl)gebEl.value=s.gebyr||'500';
